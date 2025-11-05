@@ -19,7 +19,18 @@ def _carica_cyclonedx_json(path: Path) -> List[Dict[str, str]]:
         name = c.get("name")
         version = c.get("version")
         if name and version:
-            out.append({"name": name, "version": version})
+            entry = {"name": name, "version": version}
+            purl = c.get("purl")
+            if purl:
+                entry["purl"] = purl
+            refs = []
+            for ref in c.get("externalReferences", []) or []:
+                url = ref.get("url")
+                if url:
+                    refs.append(url)
+            if refs:
+                entry["references"] = refs
+            out.append(entry)
     return out
 
 def _carica_spdx_tag_value(path: Path) -> List[Dict[str, str]]:
@@ -69,14 +80,21 @@ def _carica_spdx_tag_value(path: Path) -> List[Dict[str, str]]:
     components = []
     current_name = None
     current_version = None
+    current_purl = None
+    current_refs = []
 
     def flush():
-        nonlocal current_name, current_version
+        nonlocal current_name, current_version, current_purl, current_refs
         if current_name and current_version:
             canon = canonizza_nome(current_name)
             if canon in FIRMWARE_LIBRARIES:
-                components.append({"name": canon, "version": current_version})
-        current_name, current_version = None, None
+                entry = {"name": canon, "version": current_version}
+                if current_purl:
+                    entry["purl"] = current_purl
+                if current_refs:
+                    entry["references"] = current_refs.copy()
+                components.append(entry)
+        current_name, current_version, current_purl, current_refs = None, None, None, []
 
     try:
         with path.open("r", encoding="utf-8", errors="ignore") as f:
@@ -91,16 +109,37 @@ def _carica_spdx_tag_value(path: Path) -> List[Dict[str, str]]:
                 if line.startswith("PackageVersion:"):
                     current_version = line.split("PackageVersion:", 1)[1].strip()
                     continue
+                if line.startswith("PackageDownloadLocation:") or line.startswith("PackageHomePage:"):
+                    loc = line.split(":", 1)[1].strip()
+                    if loc and loc not in {"NONE", "NOASSERTION"}:
+                        current_refs.append(loc)
+                    continue
+                if line.startswith("ExternalRef:"):
+                    try:
+                        _, category, ref_type, locator = re.split(r"\s+", line, maxsplit=3)
+                    except ValueError:
+                        parts = line.split()
+                        if len(parts) >= 4:
+                            category, ref_type = parts[1], parts[2]
+                            locator = " ".join(parts[3:])
+                        else:
+                            continue
+                    locator = locator.strip()
+                    if category == "PACKAGE-MANAGER" and ref_type.lower() == "purl":
+                        current_purl = locator
+                    elif locator and locator not in {"NONE", "NOASSERTION"}:
+                        current_refs.append(locator)
+                    continue
             flush()
     except Exception:
         return []
 
-    # Deduplica per nome
+    # Deduplica per nome mantenendo la prima occorrenza con metadati
     dedup = {}
     for c in components:
         if c["name"] not in dedup:
-            dedup[c["name"]] = c["version"]
-    return [{"name": k, "version": v} for k, v in dedup.items()]
+            dedup[c["name"]] = c
+    return list(dedup.values())
 
 def carica_sbom_generico(path: Path) -> List[Dict[str, str]]:
     """
@@ -121,5 +160,10 @@ def estrai_librerie(componenti: List[Dict[str, str]]) -> List[Dict[str, str]]:
         name = c.get("name")
         version = c.get("version")
         if name in FIRMWARE_LIBRARIES and version:
-            out.append({"name": name, "version": version})
+            entry = {"name": name, "version": version}
+            if "purl" in c:
+                entry["purl"] = c["purl"]
+            if "references" in c:
+                entry["references"] = c["references"]
+            out.append(entry)
     return out

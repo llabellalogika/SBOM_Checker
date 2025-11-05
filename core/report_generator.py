@@ -38,7 +38,12 @@ def report_for_sbom(path: Path) -> None:
     for lib in data:
         if lib['status'] == 'da aggiornare':
             any_da = True
-            vulns = get_vulns_osv(lib['name'], lib['current'])
+            vulns = get_vulns_osv(
+                lib['name'],
+                lib['current'],
+                purl=lib.get('purl'),
+                references=lib.get('references'),
+            )
             print(f"\n{Fore.CYAN}{lib['name']} ({lib['current']}):{Style.RESET_ALL}")
             if vulns:
                 for v in vulns:
