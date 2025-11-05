@@ -9,7 +9,8 @@ def _carica_cyclonedx_json(path: Path) -> List[Dict[str, str]]:
     Estrae [{name, version}] da CycloneDX JSON.
     """
     try:
-        data = json.load(path.open("r", encoding="utf-8"))
+        with path.open("r", encoding="utf-8") as fp:
+            data = json.load(fp)
     except Exception:
         return []
     comps = data.get("components", [])
