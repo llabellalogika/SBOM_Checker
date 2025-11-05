@@ -23,13 +23,23 @@ def _carica_cyclonedx_json(path: Path) -> List[Dict[str, str]]:
             purl = c.get("purl")
             if purl:
                 entry["purl"] = purl
+
+            cpe = c.get("cpe") or c.get("cpe23", {}).get("cpe23Uri")
             refs = []
             for ref in c.get("externalReferences", []) or []:
                 url = ref.get("url")
                 if url:
-                    refs.append(url)
+                    if url.lower().startswith("cpe:"):
+                        cpe = cpe or url
+                    else:
+                        refs.append(url)
+                comment = ref.get("comment")
+                if not cpe and comment and comment.lower().startswith("cpe:"):
+                    cpe = comment
             if refs:
                 entry["references"] = refs
+            if cpe:
+                entry["cpe"] = cpe
             out.append(entry)
     return out
 
@@ -82,9 +92,10 @@ def _carica_spdx_tag_value(path: Path) -> List[Dict[str, str]]:
     current_version = None
     current_purl = None
     current_refs = []
+    current_cpe = None
 
     def flush():
-        nonlocal current_name, current_version, current_purl, current_refs
+        nonlocal current_name, current_version, current_purl, current_refs, current_cpe
         if current_name and current_version:
             canon = canonizza_nome(current_name)
             if canon in FIRMWARE_LIBRARIES:
@@ -93,8 +104,10 @@ def _carica_spdx_tag_value(path: Path) -> List[Dict[str, str]]:
                     entry["purl"] = current_purl
                 if current_refs:
                     entry["references"] = current_refs.copy()
+                if current_cpe:
+                    entry["cpe"] = current_cpe
                 components.append(entry)
-        current_name, current_version, current_purl, current_refs = None, None, None, []
+        current_name, current_version, current_purl, current_refs, current_cpe = None, None, None, [], None
 
     try:
         with path.open("r", encoding="utf-8", errors="ignore") as f:
@@ -127,6 +140,8 @@ def _carica_spdx_tag_value(path: Path) -> List[Dict[str, str]]:
                     locator = locator.strip()
                     if category == "PACKAGE-MANAGER" and ref_type.lower() == "purl":
                         current_purl = locator
+                    elif ref_type.lower() in {"cpe23type", "cpe22type"}:
+                        current_cpe = locator
                     elif locator and locator not in {"NONE", "NOASSERTION"}:
                         current_refs.append(locator)
                     continue
@@ -165,5 +180,7 @@ def estrai_librerie(componenti: List[Dict[str, str]]) -> List[Dict[str, str]]:
                 entry["purl"] = c["purl"]
             if "references" in c:
                 entry["references"] = c["references"]
+            if "cpe" in c:
+                entry["cpe"] = c["cpe"]
             out.append(entry)
     return out

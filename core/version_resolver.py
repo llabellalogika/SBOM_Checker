@@ -102,5 +102,7 @@ def risolvi_versioni(libs: List[Dict[str, str]]) -> List[Dict[str, str]]:
             entry["purl"] = lib["purl"]
         if "references" in lib:
             entry["references"] = lib["references"]
+        if "cpe" in lib:
+            entry["cpe"] = lib["cpe"]
         result.append(entry)
     return result

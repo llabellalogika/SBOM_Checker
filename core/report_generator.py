@@ -3,7 +3,7 @@ from typing import List, Dict
 from utils.colors import Fore, Style
 from core.sbom_reader import carica_sbom_generico, estrai_librerie
 from core.version_resolver import risolvi_versioni
-from core.osv_scanner import get_vulns_osv
+from core.vulnerability_scanner import get_known_vulnerabilities
 
 def report_for_sbom(path: Path) -> None:
     comps = carica_sbom_generico(path)
@@ -33,24 +33,25 @@ def report_for_sbom(path: Path) -> None:
 
         print(f"| {name_col} | {cur_raw} | {lat_raw} | {src_raw} | {st_col} |")
 
-    print(f"\n{Fore.MAGENTA}Vulnerabilità rilevate tramite OSV:{Style.RESET_ALL}")
-    any_da = False
+    print(f"\n{Fore.MAGENTA}Vulnerabilità rilevate:{Style.RESET_ALL}")
+    any_entry = False
     for lib in data:
-        if lib['status'] == 'da aggiornare':
-            any_da = True
-            vulns = get_vulns_osv(
-                lib['name'],
-                lib['current'],
-                purl=lib.get('purl'),
-                references=lib.get('references'),
-            )
-            print(f"\n{Fore.CYAN}{lib['name']} ({lib['current']}):{Style.RESET_ALL}")
-            if vulns:
-                for v in vulns:
-                    vid = v.get("id", "UNKNOWN")
-                    summary = v.get("summary", "").split('\n')[0]
-                    print(f"  - {vid}: {summary}")
-            else:
-                print("  Nessuna vulnerabilità trovata.")
-    if not any_da:
-        print("  (Nessuna libreria da aggiornare.)")
+        vulns = get_known_vulnerabilities(
+            lib['name'],
+            lib['current'],
+            purl=lib.get('purl'),
+            references=lib.get('references'),
+            cpe=lib.get('cpe'),
+        )
+        print(f"\n{Fore.CYAN}{lib['name']} ({lib['current']}):{Style.RESET_ALL}")
+        if vulns:
+            any_entry = True
+            for v in vulns:
+                vid = v.get("id", "UNKNOWN")
+                summary = (v.get("summary") or "").split('\n')[0]
+                source = v.get("source", "?")
+                print(f"  - [{source}] {vid}: {summary}")
+        else:
+            print("  Nessuna vulnerabilità trovata.")
+    if not any_entry:
+        print("  (Nessuna vulnerabilità nota trovata per le librerie analizzate.)")
