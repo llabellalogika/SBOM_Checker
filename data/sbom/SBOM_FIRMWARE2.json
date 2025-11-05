@@ -1,0 +1,156 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "components": [
+    {
+      "type": "library",
+      "name": "FreeRTOS",
+      "version": "11.2.0",
+      "publisher": "FreeRTOS.org",
+      "purl": "pkg:generic/freertos@10.4.3",
+      "licenses": [
+        {
+          "license": {
+            "name": "UNKNOWN"
+          }
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "4a9455af71b66306f2d03eb2e6c4e5003bfa131b2c43a5025e6c41f2ad98cb7f"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "HAL",
+      "version": "1.12.1",
+      "publisher": "STMicroelectronics",
+      "purl": "pkg:generic/hal@1.10.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "UNKNOWN"
+          }
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "fc3139816e17eec02026388a7f475d07117680d288fa47a68aa6d4d16ec4cdc2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "TouchGFX",
+      "version": "4.24.0",
+      "publisher": "STMicroelectronics",
+      "purl": "pkg:generic/touchgfx@4.21.4",
+      "licenses": [
+        {
+          "license": {
+            "name": "UNKNOWN"
+          }
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "51abf74ccece8aedc9eb86464ab6a66da56be248c9c92556aa487591178d00e8"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "USB-HOST",
+      "version": "3.2.1",
+      "publisher": "STMicroelectronics",
+      "purl": "pkg:generic/usb-host@1.0.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "UNKNOWN"
+          }
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "cc9ca201a62917aad4697f232e0d0f4a91ebefd47d9510e3fe1235d0531c974c"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "FAT-FS",
+      "version": "R0.12c",
+      "publisher": "ChaN",
+      "purl": "pkg:generic/fat-fs@R0.13c",
+      "licenses": [
+        {
+          "license": {
+            "name": "UNKNOWN"
+          }
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "dcc55b0bf5ffdcb91b72e1d610015e6f809f73a91fb2999592aadc1b42e55006"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "CMSIS-RTOS",
+      "version": "5.9.0",
+      "publisher": "ARM",
+      "purl": "pkg:generic/cmsis-rtos@2.1.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "UNKNOWN"
+          }
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "822b01ffa8ad5c99e1f49e524cee143324032c69add3e7e6a62ae7f8789160e7"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "LwIP",
+      "version": "2.2.1",
+      "publisher": "lwIP Project",
+      "purl": "pkg:generic/lwip@2.1.2",
+      "licenses": [
+        {
+          "license": {
+            "name": "UNKNOWN"
+          }
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "17bd2b7167d25e3318ef2deaac822de99120749d3cb542b1b901930926bbd0bd"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "timestamp": "2025-06-13T15:43:22.141334Z",
+    "authors": [
+      {
+        "name": "Lorenzo Labella",
+        "organization": "LogikaControl"
+      }
+    ]
+  }
+}
