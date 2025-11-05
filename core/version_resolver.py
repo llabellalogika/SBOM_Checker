@@ -91,11 +91,18 @@ def risolvi_versioni(libs: List[Dict[str, str]]) -> List[Dict[str, str]]:
                 lat, fonte = _normalizza(v), "Savannah"
 
         status = "sconosciuto" if lat == "non rilevata" else ("aggiornata" if cur == lat else "da aggiornare")
-        result.append({
+        entry = {
             "name": name,
             "current": cur,
             "latest": lat,
             "source": fonte,
-            "status": status
-        })
+            "status": status,
+        }
+        if "purl" in lib:
+            entry["purl"] = lib["purl"]
+        if "references" in lib:
+            entry["references"] = lib["references"]
+        if "cpe" in lib:
+            entry["cpe"] = lib["cpe"]
+        result.append(entry)
     return result
