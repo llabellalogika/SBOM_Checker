@@ -13,57 +13,57 @@ def _build_reports(sbom_files):
     for sbom_file in sbom_files:
         libs = estrai_librerie(carica_sbom_generico(sbom_file))
         data = risolvi_versioni(libs)
-        count_da = sum(1 for lib in data if lib['status'] == 'da aggiornare')
-        reports.append((sbom_file, data, count_da))
+        count_needs_update = sum(1 for lib in data if lib['status'] == 'needs update')
+        reports.append((sbom_file, data, count_needs_update))
     return reports
 
 def _menu(reports):
     while True:
-        print("\n Vuoi eseguire una ricerca?")
-        print("1. Cerca una libreria da aggiornare")
-        print("2. Cerca una SBOM specifica")
-        print("3. Esci")
-        scelta = input(" Inserisci la tua scelta (1/2/3): ").strip()
+        print("\n Do you want to run a search?")
+        print("1. Find a library that needs an update")
+        print("2. Find a specific SBOM")
+        print("3. Exit")
+        scelta = input(" Enter your choice (1/2/3): ").strip()
 
         if scelta == "1":
-            query = input(" Nome della libreria: ").strip()
+            query = input(" Library name: ").strip()
             if query.lower() in {lib.lower() for lib in FIRMWARE_LIBRARIES}:
-                trovate = False
-                print(f"\n SBOM con '{query}' da aggiornare:")
+                found = False
+                print(f"\n SBOMs with '{query}' needing an update:")
                 for sbom_file, data, _ in reports:
                     for lib in data:
-                        if lib['name'].lower() == query.lower() and lib['status'] == "da aggiornare":
-                            print(f" {sbom_file.name} → Versione attuale: {lib['current']} | Ultima: {lib['latest']}")
-                            trovate = True
-                if not trovate:
-                    print(f" Nessuna SBOM con '{query}' da aggiornare.")
+                        if lib['name'].lower() == query.lower() and lib['status'] == "needs update":
+                            print(f" {sbom_file.name} → Current version: {lib['current']} | Latest: {lib['latest']}")
+                            found = True
+                if not found:
+                    print(f" No SBOMs with '{query}' needing an update.")
             else:
-                print(f" Libreria '{query}' non riconosciuta.")
+                print(f" Library '{query}' not recognized.")
         elif scelta == "2":
-            nome_sbom = input(" Inserisci il nome del file SBOM (es. SBOM_FIRMWARE.json o TMB2.spdx): ").strip().lower()
+            nome_sbom = input(" Enter the SBOM file name (e.g., SBOM_FIRMWARE.json or TMB2.spdx): ").strip().lower()
             path_match = next((x[0] for x in reports if x[0].name.strip().lower() == nome_sbom), None)
             if path_match:
                 report_for_sbom(path_match)
             else:
-                print(f" File '{nome_sbom}' non trovato.")
+                print(f" File '{nome_sbom}' not found.")
         elif scelta == "3":
-            print(" Uscita dal programma.")
+            print(" Exiting program.")
             sys.exit(0)
         else:
-            print(" Scelta non valida. Riprova.")
+            print(" Invalid choice. Please try again.")
 
 def main():
     print(f"\nFirmware Checker - by {Fore.LIGHTYELLOW_EX}Logika{Fore.LIGHTGREEN_EX}Control{Style.RESET_ALL} (v1.0)\n")
-    print(f"\nUsando cartella SBOM: {Fore.CYAN}{SBOM_DIR.resolve()}{Style.RESET_ALL}")
+    print(f"\nUsing SBOM folder: {Fore.CYAN}{SBOM_DIR.resolve()}{Style.RESET_ALL}")
 
     if not SBOM_DIR.is_dir():
-        print(f" Cartella non trovata: {SBOM_DIR}")
+        print(f" Folder not found: {SBOM_DIR}")
         sys.exit(1)
 
-    # Cerca sia CycloneDX (*.json) sia SPDX tag-value (*.spdx)
+    # Search for both CycloneDX (*.json) and SPDX tag-value (*.spdx)
     sbom_files = list(SBOM_DIR.glob("*.json")) + list(SBOM_DIR.glob("*.spdx"))
     if not sbom_files:
-        print(" Nessun file .json o .spdx trovato in SBOM_DIR.")
+        print(" No .json or .spdx files found in SBOM_DIR.")
         sys.exit(1)
 
     reports = _build_reports(sbom_files)
