@@ -1,0 +1,155 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-12-03T09:00:00Z",
+    "customer": {
+      "companyName": "Robuschi S.r.l.",
+      "group": "Ingersoll Rand"
+    },
+    "authors": [
+      {
+        "name": "Logika Control S.r.l.",
+        "organization": "Logika Control S.r.l."
+      }
+    ],
+    "component": {
+      "type": "firmware",
+      "name": "Robox Connect 2.0",
+      "version": "1.0.0",
+      "supplier": {
+        "name": "Logika Control S.r.l."
+      },
+      "properties": [
+        {
+          "name": "sbom:creator",
+          "value": "Logika Control S.r.l."
+        },
+        {
+          "name": "sbom:version",
+          "value": "1"
+        },
+        {
+          "name": "sbom:revision",
+          "value": "1"
+        }
+      ],
+      "description": "This Software Bill of Materials (SBOM) has been created by Logika Control S.r.l. for the Robox Connect 2.0 product manufactured for Robuschi S.r.l., a company belonging to the Ingersoll Rand group. The document provides a formal inventory of all third-party software components included in the firmware, detailing their versions, suppliers, and external references."
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "FreeRTOS",
+      "version": "10.3.1",
+      "publisher": "Amazon Web Services",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.freertos.org"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/STMicroelectronics/stm32-mw-freertos.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "STM32H7xx_HAL_Driver",
+      "version": "1.11.5",
+      "publisher": "STMicroelectronics",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.st.com/en/embedded-software/stm32cubeh7.html"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/STMicroelectronics/stm32h7xx-hal-driver.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "TouchGFX",
+      "version": "4.24.0",
+      "publisher": "STMicroelectronics",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://support.touchgfx.com/docs/introduction/welcome"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/STMicroelectronics/STM32CubeH7/tree/master/Middlewares/ST/TouchGFX"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "STM32_USB_Host_Library",
+      "version": "3.5.0",
+      "publisher": "STMicroelectronics",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": " "
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/STMicroelectronics/stm32-mw-usb-host.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "FatFs",
+      "version": "R0.12c",
+      "publisher": "ChaN (ELM-Chan FatFS)",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "http://elm-chan.org/fsw/ff/00index_e.html"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/STMicroelectronics/stm32-mw-fatfs.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "CMSIS-RTOS",
+      "version": "2.0.0",
+      "publisher": "ARM",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://arm-software.github.io/CMSIS_6/latest/RTOS2/index.html"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/STMicroelectronics/stm32-mw-freertos.git"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "LwIP",
+      "version": "2.1.2",
+      "publisher": "LwIP Contributors",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://savannah.nongnu.org/projects/lwip/"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/STMicroelectronics/stm32-mw-lwip.git"
+        }
+      ]
+    }
+  ]
+}
