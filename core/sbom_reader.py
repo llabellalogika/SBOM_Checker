@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
 from typing import List, Dict, Optional
-from core.constants import FIRMWARE_LIBRARIES
 import re
+from core.constants import FIRMWARE_LIBRARIES
 
 def _carica_cyclonedx_json(path: Path) -> List[Dict[str, str]]:
     """
@@ -37,19 +37,32 @@ def _carica_spdx_tag_value(path: Path) -> List[Dict[str, str]]:
         "component-lwip": "LwIP",
         "lwip-lwip": "LwIP",
 
-        "fatfs": "FAT-FS",
-        "component-fatfs": "FAT-FS",
+        "fatfs": "FatFs",
+        "fat-fs": "FatFs",
+        "component-fatfs": "FatFs",
 
         "cmsis-rtos": "CMSIS-RTOS",
         "cmsis": "CMSIS-RTOS",
 
-        "usb-host": "USB-HOST",
-        "usb": "USB-HOST",
-        "component-usb": "USB-HOST",
-        "stm32_usb_host_library": "USB-HOST",
-        "stm32cube_usb_host": "USB-HOST",
+        "mbedtls": "mbedTLS",
+        "libjpeg": "LibJPEG",
+        "openamp": "OpenAMP",
+        "stemwin": "STemWin",
+        "stm32_audio": "STM32_Audio",
+
+        "usb-host": "STM32_USB_Host_Library",
+        "usb": "STM32_USB_Host_Library",
+        "component-usb": "STM32_USB_Host_Library",
+        "stm32_usb_host_library": "STM32_USB_Host_Library",
+        "stm32cube_usb_host": "STM32_USB_Host_Library",
+
+        "usb-device": "STM32_USB_Device_Library",
+        "stm32_usb_device_library": "STM32_USB_Device_Library",
+        "stm32cube_usb_device": "STM32_USB_Device_Library",
 
         "touchgfx": "TouchGFX",
+        "hal": "STM32H7xx_HAL_Driver",
+        "stm32h7xx_hal_driver": "STM32H7xx_HAL_Driver",
     }
 
     def canonizza_nome(pkg_name: str) -> Optional[str]:
@@ -59,10 +72,17 @@ def _carica_spdx_tag_value(path: Path) -> List[Dict[str, str]]:
         # fallback euristico
         if "freertos" in s: return "FreeRTOS"
         if "lwip" in s: return "LwIP"
-        if "fatfs" in s or "fat-fs" in s: return "FAT-FS"
+        if "fatfs" in s or "fat-fs" in s: return "FatFs"
         if "cmsis" in s: return "CMSIS-RTOS"
-        if "usb" in s and "host" in s: return "USB-HOST"
+        if "mbedtls" in s: return "mbedTLS"
+        if "openamp" in s: return "OpenAMP"
+        if "libjpeg" in s: return "LibJPEG"
+        if "stm32h7" in s or "hal" in s: return "STM32H7xx_HAL_Driver"
+        if "usb" in s and "host" in s: return "STM32_USB_Host_Library"
+        if "usb" in s and "device" in s: return "STM32_USB_Device_Library"
         if "touchgfx" in s: return "TouchGFX"
+        if "stemwin" in s: return "STemWin"
+        if "audio" in s and "stm32" in s: return "STM32_Audio"
         return None
 
     components = []

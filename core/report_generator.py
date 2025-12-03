@@ -1,10 +1,7 @@
-import re
 from pathlib import Path
 from typing import Dict, List
 
 from utils.colors import Fore, Style
-
-from core.osv_scanner import get_vulns_osv
 from core.sbom_reader import carica_sbom_generico, estrai_librerie
 from core.version_resolver import risolvi_versioni
 
@@ -12,9 +9,11 @@ from core.version_resolver import risolvi_versioni
 HEADERS = [
     "Nome libreria",
     "Versione attuale",
-    "Ultima versione",
-    "Fonte",
-    "Stato",
+    "Data rilascio (attuale)",
+    "Ultima versione disponibile",
+    "Data rilascio (ultima)",
+    "Sicurezza versioni intermedie",
+    "Da aggiornare",
 ]
 
 
@@ -23,9 +22,11 @@ def _column_widths(rows: List[Dict[str, str]]) -> List[int]:
     for lib in rows:
         widths[0] = max(widths[0], len(lib.get("name", "")))
         widths[1] = max(widths[1], len(lib.get("current", "")))
-        widths[2] = max(widths[2], len(lib.get("latest", "")))
-        widths[3] = max(widths[3], len(lib.get("source", "")))
-        widths[4] = max(widths[4], len(lib.get("status", "")))
+        widths[2] = max(widths[2], len(lib.get("current_date", "")))
+        widths[3] = max(widths[3], len(lib.get("latest", "")))
+        widths[4] = max(widths[4], len(lib.get("latest_date", "")))
+        widths[5] = max(widths[5], len(lib.get("security_label", "")))
+        widths[6] = max(widths[6], len(lib.get("status", "")))
     return widths
 
 
@@ -45,69 +46,12 @@ def _current_color(status: str) -> str:
     return Fore.YELLOW
 
 
-def _latest_color(status: str, latest: str) -> str:
-    if latest == "non rilevata":
-        return Fore.YELLOW
-    if status == "da aggiornare":
+def _security_color(label: str) -> str:
+    if label.lower() == "sicura":
         return Fore.GREEN
-    if status == "aggiornata":
-        return Fore.GREEN
-    return Fore.YELLOW
-
-
-def _severity_label(vuln: Dict) -> str:
-    severity = vuln.get("severity") or []
-    if severity:
-        entry = severity[0]
-        stype = (entry.get("type") or "").replace("_", " ")
-        score = entry.get("score")
-        if score:
-            return f"{stype} {score}".strip()
-        return stype or "n.d."
-
-    database = vuln.get("database_specific")
-    if isinstance(database, dict):
-        db_sev = database.get("severity")
-        if db_sev:
-            return str(db_sev)
-
-    return "n.d."
-
-
-def _severity_color(label: str) -> str:
-    norm = label.upper()
-    if "CRITICAL" in norm:
+    if label.lower() == "non sicura":
         return Fore.RED
-    if "HIGH" in norm or "ALTA" in norm:
-        return Fore.LIGHTRED_EX
-    if "MEDIUM" in norm or "MODERATE" in norm or "MEDIA" in norm:
-        return Fore.YELLOW
-    if "LOW" in norm or "BASSA" in norm:
-        return Fore.GREEN
-
-    match = re.search(r"\d+(?:\.\d+)?", label)
-    if match:
-        try:
-            score = float(match.group())
-            if score >= 9:
-                return Fore.RED
-            if score >= 7:
-                return Fore.LIGHTRED_EX
-            if score >= 4:
-                return Fore.YELLOW
-            if score > 0:
-                return Fore.GREEN
-        except ValueError:
-            pass
-
-    return Fore.CYAN
-
-
-def _format_summary(vuln: Dict) -> str:
-    summary = (vuln.get("summary") or "").strip()
-    if not summary:
-        return "Nessuna descrizione fornita da OSV."
-    return summary.splitlines()[0]
+    return Fore.YELLOW
 
 
 def report_for_sbom(path: Path) -> None:
@@ -121,10 +65,7 @@ def report_for_sbom(path: Path) -> None:
     header_cells = [h.ljust(w) for h, w in zip(HEADERS, widths)]
     header_line = "| " + " | ".join(Fore.MAGENTA + cell + Style.RESET_ALL for cell in header_cells) + " |"
 
-    print(
-        f"\n{Fore.BLUE}Analisi file: {path.name}{Style.RESET_ALL} "
-        f"{Style.DIM}(librerie da aggiornare: {count_da}){Style.RESET_ALL}"
-    )
+    print(f"\n{Fore.BLUE}SBOM: {path.name}{Style.RESET_ALL}")
     print(border)
     print(header_line)
     print(border)
@@ -133,77 +74,51 @@ def report_for_sbom(path: Path) -> None:
         status = lib["status"]
         name_raw = lib["name"].ljust(widths[0])
         current_raw = lib["current"].ljust(widths[1])
-        latest_raw = lib["latest"].ljust(widths[2])
-        source_raw = lib["source"].ljust(widths[3])
-        status_raw = status.ljust(widths[4])
+        current_date_raw = str(lib.get("current_date", "")).ljust(widths[2])
+        latest_raw = lib["latest"].ljust(widths[3])
+        latest_date_raw = str(lib.get("latest_date", "")).ljust(widths[4])
+        security_raw = lib.get("security_label", "").ljust(widths[5])
+        status_raw = status.ljust(widths[6])
 
         name_cell = Fore.CYAN + name_raw + Style.RESET_ALL
         current_cell = _current_color(status) + current_raw + Style.RESET_ALL
-        latest_cell = _latest_color(status, lib["latest"]) + latest_raw + Style.RESET_ALL
-        if lib["source"]:
-            source_cell = Fore.LIGHTMAGENTA_EX + source_raw + Style.RESET_ALL
-        else:
-            source_cell = Style.DIM + source_raw + Style.RESET_ALL
+        current_date_cell = Style.DIM + current_date_raw + Style.RESET_ALL
+        latest_cell = Fore.CYAN + latest_raw + Style.RESET_ALL
+        latest_date_cell = Style.DIM + latest_date_raw + Style.RESET_ALL
+        security_cell = _security_color(lib.get("security_label", "")) + security_raw + Style.RESET_ALL
         status_cell = _status_color(status) + status_raw + Style.RESET_ALL
 
         row = "| " + " | ".join(
-            [name_cell, current_cell, latest_cell, source_cell, status_cell]
+            [
+                name_cell,
+                current_cell,
+                current_date_cell,
+                latest_cell,
+                latest_date_cell,
+                security_cell,
+                status_cell,
+            ]
         ) + " |"
         print(row)
 
     print(border)
+    print(
+        f"\nLibrerie da aggiornare: {Fore.RED}{count_da}{Style.RESET_ALL}" if count_da else
+        f"\nLibrerie da aggiornare: {Fore.GREEN}{count_da}{Style.RESET_ALL}"
+    )
 
-    print(f"\n{Fore.MAGENTA}Vulnerabilità riscontrate nelle librerie della SBOM:{Style.RESET_ALL}")
-    if not data:
-        print(f"  {Style.DIM}Nessuna libreria riconosciuta nel file.{Style.RESET_ALL}")
-        return
+    notes_to_print = [lib for lib in data if lib.get("security_notes")]
+    if notes_to_print:
+        print(f"\n{Fore.MAGENTA}Release notes con aggiornamenti di sicurezza:{Style.RESET_ALL}")
+        for lib in notes_to_print:
+            print(f"\n{Fore.CYAN}{lib['name']}{Style.RESET_ALL}")
+            for rel in lib["security_notes"]:
+                version = rel.get("version", "")
+                date = rel.get("release_date") or "data n.d."
+                notes = rel.get("release_notes") or "Nessuna release note disponibile."
+                print(f"  {Fore.YELLOW}{version}{Style.RESET_ALL} ({date})")
+                for line in notes.splitlines():
+                    print(f"    - {line}")
+    else:
+        print(f"\n{Style.DIM}Nessun aggiornamento di sicurezza rilevato nelle versioni successive.{Style.RESET_ALL}")
 
-    for lib in data:
-        status = lib["status"]
-        scan = get_vulns_osv(lib["name"], lib["current"])
-        current_cell = _current_color(status) + lib["current"] + Style.RESET_ALL
-
-        print(
-            f"\n{Fore.CYAN}{lib['name']}{Style.RESET_ALL} "
-            f"({Style.DIM}versione{Style.RESET_ALL} {current_cell})"
-        )
-
-        if scan.get("error"):
-            print(
-                f"  {Fore.YELLOW}Impossibile contattare OSV: {scan['error']}.{Style.RESET_ALL}"
-            )
-            continue
-
-        vulns = scan.get("vulns", [])
-        if not vulns:
-            query_desc = scan.get("query") or "query sconosciuta"
-            print(
-                f"  Nessuna vulnerabilità nota ({Style.DIM}ricerca: {query_desc}{Style.RESET_ALL})."
-            )
-            continue
-
-        query_desc = scan.get("query")
-        if query_desc:
-            print(
-                f"  {Style.DIM}Ricerca OSV effettuata con: {query_desc}.{Style.RESET_ALL}"
-            )
-
-        for vuln in vulns:
-            vuln_id = vuln.get("id", "SENZA-ID")
-            label = _severity_label(vuln)
-            sev_color = _severity_color(label)
-            summary = _format_summary(vuln)
-            print(
-                f"  - {sev_color}{vuln_id}{Style.RESET_ALL} "
-                f"[{label}] {summary}"
-            )
-
-            refs = [
-                ref.get("url")
-                for ref in vuln.get("references", [])
-                if isinstance(ref, dict) and ref.get("url")
-            ]
-            if refs:
-                print(f"    Riferimenti: {Fore.CYAN}{refs[0]}{Style.RESET_ALL}")
-                for extra in refs[1:3]:
-                    print(f"                 {Fore.CYAN}{extra}{Style.RESET_ALL}")
