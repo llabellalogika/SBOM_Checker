@@ -1,7 +1,7 @@
 from colorama import init, Fore, Style
 
-# Inizializza colorama per Windows
+# Initialize colorama for Windows
 init(autoreset=True)
 
-# Esporta per uso diretto
+# Export for direct use
 __all__ = ["Fore", "Style"]

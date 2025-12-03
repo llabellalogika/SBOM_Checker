@@ -7,10 +7,10 @@ from core.version_resolver import risolvi_versioni
 
 
 HEADERS = [
-    "Nome libreria",
-    "Versione attuale",
-    "Ultima versione disponibile",
-    "Sicurezza versioni intermedie",
+    "Library name",
+    "Current version",
+    "Latest available version",
+    "Security of later versions",
 ]
 
 
@@ -25,17 +25,17 @@ def _column_widths(rows: List[Dict[str, str]]) -> List[int]:
 
 
 def _current_color(status: str) -> str:
-    if status == "aggiornata":
+    if status == "up-to-date":
         return Fore.GREEN
-    if status == "da aggiornare":
+    if status == "needs update":
         return Fore.RED
     return Fore.YELLOW
 
 
 def _security_color(label: str) -> str:
-    if label.lower() == "sicura":
+    if label.lower() == "secure":
         return Fore.GREEN
-    if label.lower() == "non sicura":
+    if label.lower() == "not secure":
         return Fore.RED
     return Fore.YELLOW
 
@@ -44,7 +44,7 @@ def report_for_sbom(path: Path) -> None:
     comps = carica_sbom_generico(path)
     libs = estrai_librerie(comps)
     data = risolvi_versioni(libs)
-    count_da = sum(1 for lib in data if lib["status"] == "da aggiornare")
+    count_needs_update = sum(1 for lib in data if lib["status"] == "needs update")
 
     widths = _column_widths(data)
     border = "+" + "+".join("-" * (w + 2) for w in widths) + "+"
@@ -80,22 +80,22 @@ def report_for_sbom(path: Path) -> None:
 
     print(border)
     print(
-        f"\nLibrerie da aggiornare: {Fore.RED}{count_da}{Style.RESET_ALL}" if count_da else
-        f"\nLibrerie da aggiornare: {Fore.GREEN}{count_da}{Style.RESET_ALL}"
+        f"\nLibraries requiring updates: {Fore.RED}{count_needs_update}{Style.RESET_ALL}" if count_needs_update else
+        f"\nLibraries requiring updates: {Fore.GREEN}{count_needs_update}{Style.RESET_ALL}"
     )
 
     notes_to_print = [lib for lib in data if lib.get("security_notes")]
     if notes_to_print:
-        print(f"\n{Fore.MAGENTA}Release notes con aggiornamenti di sicurezza:{Style.RESET_ALL}")
+        print(f"\n{Fore.MAGENTA}Release notes with security updates:{Style.RESET_ALL}")
         for lib in notes_to_print:
             print(f"\n{Fore.CYAN}{lib['name']}{Style.RESET_ALL}")
             for rel in lib["security_notes"]:
                 version = rel.get("version", "")
-                date = rel.get("release_date") or "data n.d."
-                notes = rel.get("release_notes") or "Nessuna release note disponibile."
+                date = rel.get("release_date") or "date n/a"
+                notes = rel.get("release_notes") or "No release notes available."
                 print(f"  {Fore.YELLOW}{version}{Style.RESET_ALL} ({date})")
                 for line in notes.splitlines():
                     print(f"    - {line}")
     else:
-        print(f"\n{Style.DIM}Nessun aggiornamento di sicurezza rilevato nelle versioni successive.{Style.RESET_ALL}")
+        print(f"\n{Style.DIM}No security updates detected in later versions.{Style.RESET_ALL}")
 
