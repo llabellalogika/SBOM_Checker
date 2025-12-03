@@ -53,7 +53,7 @@ def _menu(reports):
             print(" Scelta non valida. Riprova.")
 
 def main():
-    print(f"\nFirmware Checker - by {Fore.LIGHTYELLOW_EX}Logika{Fore.LIGHTGREEN_EX}Control{Style.RESET_ALL} (v1.0 beta)\n")
+    print(f"\nFirmware Checker - by {Fore.LIGHTYELLOW_EX}Logika{Fore.LIGHTGREEN_EX}Control{Style.RESET_ALL} (v1.0)\n")
     print(f"\nUsando cartella SBOM: {Fore.CYAN}{SBOM_DIR.resolve()}{Style.RESET_ALL}")
 
     if not SBOM_DIR.is_dir():
