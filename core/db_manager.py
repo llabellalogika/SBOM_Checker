@@ -1,9 +1,11 @@
 import sqlite3
-from typing import Optional
+from typing import Dict, List, Optional
+
 from utils.paths import DB_PATH
 
 _conn = None
 _cursor = None
+
 
 def _ensure_connection():
     global _conn, _cursor
@@ -15,17 +17,63 @@ def _ensure_connection():
             _conn = None
             _cursor = None
 
-def get_latest_db_version(name: str) -> str:
-    """
-    Ritorna l’ultima versione nota per 'name' dalla tabella Version.
-    """
+
+def _library_id(name: str) -> Optional[int]:
+    """Ritorna l'ID della libreria dal nome (case-insensitive)."""
+
     _ensure_connection()
-    if _cursor:
-        try:
-            _cursor.execute('SELECT version FROM "Version" WHERE name = ?', (name,))
-            row = _cursor.fetchone()
-            if row and row[0]:
-                return row[0]
-        except Exception:
-            pass
-    return "non rilevata"
+    if _cursor is None:
+        return None
+
+    try:
+        _cursor.execute(
+            'SELECT ID FROM "FirmwareLibraries" WHERE LOWER(name) = LOWER(?)', (name,)
+        )
+        row = _cursor.fetchone()
+        return row[0] if row else None
+    except Exception:
+        return None
+
+
+def get_releases_for_library(name: str) -> List[Dict[str, str]]:
+    """Restituisce tutte le release per una libreria ordinate per data."""
+
+    lib_id = _library_id(name)
+    if lib_id is None:
+        return []
+
+    try:
+        _cursor.execute(
+            'SELECT version, release_notes, release_date, security '\
+            'FROM "ReleaseNotes" WHERE "IDLibraries" = ? '
+            'ORDER BY COALESCE(release_date, "") ASC, version ASC',
+            (lib_id,),
+        )
+        rows = _cursor.fetchall() or []
+        releases = []
+        for version, notes, rel_date, security in rows:
+            releases.append(
+                {
+                    "version": version,
+                    "release_notes": notes or "",
+                    "release_date": rel_date,
+                    "security": security,
+                }
+            )
+        return releases
+    except Exception:
+        return []
+
+
+def get_library_names() -> List[str]:
+    """Restituisce l'elenco delle librerie presenti a DB."""
+
+    _ensure_connection()
+    if _cursor is None:
+        return []
+
+    try:
+        _cursor.execute('SELECT name FROM "FirmwareLibraries"')
+        return [row[0] for row in (_cursor.fetchall() or []) if row and row[0]]
+    except Exception:
+        return []
