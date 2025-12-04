@@ -8,19 +8,18 @@ from core.version_resolver import risolvi_versioni
 
 
 class SBOMCheckerGUI:
-    BG_COLOR = "#0b132b"
-    PANEL_COLOR = "#111a2e"
-    SIDEBAR_COLOR = "#0c1221"
-    ACCENT_COLOR = "#5bc0be"
-    ALERT_COLOR = "#ff6b6b"
-    TEXT_COLOR = "#e0e6f1"
-    MUTED_TEXT_COLOR = "#a7b3d0"
+    BG_COLOR = "#f6fbff"
+    PANEL_COLOR = "#ffffff"
+    ACCENT_COLOR = "#3da9ff"
+    ALERT_COLOR = "#e86b5d"
+    TEXT_COLOR = "#1f2a44"
+    MUTED_TEXT_COLOR = "#60708f"
 
     def __init__(self) -> None:
         self.root = tk.Tk()
         self.root.title("SBOM Checker - GUI")
         self.root.configure(bg=self.BG_COLOR)
-        self.root.geometry("1080x680")
+        self.root.geometry("960x620")
 
         self._configure_style()
         self._build_layout()
@@ -35,30 +34,42 @@ class SBOMCheckerGUI:
             foreground=self.TEXT_COLOR,
             rowheight=28,
             borderwidth=0,
+            relief="flat",
         )
         style.configure(
             "Treeview.Heading",
-            background=self.ACCENT_COLOR,
-            foreground=self.BG_COLOR,
-            font=("Segoe UI", 10, "bold"),
-        )
-        style.map("Treeview", background=[("selected", "#22304f")])
-
-        style.configure("TButton", font=("Segoe UI", 10, "bold"), padding=10)
-        style.configure(
-            "Accent.TButton",
-            background=self.ACCENT_COLOR,
-            foreground=self.BG_COLOR,
-            relief="flat",
+            background=self.BG_COLOR,
+            foreground=self.TEXT_COLOR,
+            font=("Inter", 10, "bold"),
             borderwidth=0,
+            relief="flat",
         )
-        style.map("Accent.TButton", background=[("active", "#77d8d6")])
+        style.map(
+            "Treeview",
+            background=[("selected", "#e7f4ff")],
+            foreground=[("selected", self.TEXT_COLOR)],
+        )
 
+        style.configure("TButton", font=("Segoe UI", 10, "bold"), padding=8)
+        style.configure(
+            "TButton",
+            font=("Inter", 10, "bold"),
+            padding=(14, 8),
+            borderwidth=0,
+            relief="flat",
+            background=self.ACCENT_COLOR,
+            foreground="#ffffff",
+        )
+        style.map(
+            "TButton",
+            background=[("active", "#1f8ed6")],
+            relief=[("pressed", "flat")],
+        )
         style.configure(
             "TLabel",
             background=self.BG_COLOR,
             foreground=self.TEXT_COLOR,
-            font=("Segoe UI", 11),
+            font=("Inter", 11),
         )
         style.configure(
             "Card.TFrame",
@@ -130,15 +141,15 @@ class SBOMCheckerGUI:
         self._build_notes_panel()
 
     def _build_header(self) -> None:
-        header = tk.Frame(self.content, bg=self.BG_COLOR)
-        header.pack(fill="x", pady=(18, 8), padx=24)
+        header = tk.Frame(self.root, bg=self.BG_COLOR)
+        header.pack(fill="x", pady=(16, 8), padx=16)
 
         title = tk.Label(
             header,
             text="Firmware SBOM Checker",
             fg=self.ACCENT_COLOR,
             bg=self.BG_COLOR,
-            font=("Segoe UI", 18, "bold"),
+            font=("Inter", 18, "bold"),
         )
         title.pack(anchor="w")
 
@@ -147,7 +158,7 @@ class SBOMCheckerGUI:
             text="Genera report moderni a partire da file SBOM (.json o .spdx)",
             fg=self.MUTED_TEXT_COLOR,
             bg=self.BG_COLOR,
-            font=("Segoe UI", 11),
+            font=("Inter", 11),
         )
         subtitle.pack(anchor="w")
 
@@ -155,8 +166,8 @@ class SBOMCheckerGUI:
         messagebox.showinfo("Menu", "Seleziona un file SBOM dalla schermata principale per generare il report.")
 
     def _build_controls(self) -> None:
-        controls = ttk.Frame(self.content, style="Card.TFrame")
-        controls.pack(fill="x", padx=24, pady=(0, 14))
+        controls = tk.Frame(self.root, bg=self.BG_COLOR)
+        controls.pack(fill="x", padx=16, pady=(0, 12))
 
         left = tk.Frame(controls, bg=self.PANEL_COLOR)
         left.pack(side="left", padx=(4, 0), pady=8)
@@ -165,7 +176,7 @@ class SBOMCheckerGUI:
             left,
             text="Genera report",
             command=self._on_select_file,
-            style="Accent.TButton",
+            style="TButton",
         )
         select_btn.pack(side="left")
 
@@ -173,9 +184,8 @@ class SBOMCheckerGUI:
             left,
             text="Nessun file selezionato",
             fg=self.MUTED_TEXT_COLOR,
-            bg=self.PANEL_COLOR,
+            bg=self.BG_COLOR,
             font=("Segoe UI", 10),
-            padx=10,
         )
         self.selected_file_label.pack(side="left", padx=12)
 
@@ -186,14 +196,14 @@ class SBOMCheckerGUI:
             summary,
             text="",
             fg=self.TEXT_COLOR,
-            bg=self.PANEL_COLOR,
+            bg=self.BG_COLOR,
             font=("Segoe UI", 11, "bold"),
         )
         self.update_label.pack(side="right")
 
     def _build_table(self) -> None:
-        table_frame = tk.Frame(self.content, bg=self.BG_COLOR)
-        table_frame.pack(fill="both", expand=True, padx=24, pady=(0, 12))
+        table_frame = tk.Frame(self.root, bg=self.BG_COLOR)
+        table_frame.pack(fill="both", expand=True, padx=16, pady=(0, 12))
 
         columns = [h for h in HEADERS]
         self.tree = ttk.Treeview(
@@ -216,29 +226,27 @@ class SBOMCheckerGUI:
         table_frame.grid_rowconfigure(0, weight=1)
         table_frame.grid_columnconfigure(0, weight=1)
 
-        self.tree.tag_configure("needs update", background="#ffecec", foreground="#c0392b")
-        self.tree.tag_configure("up-to-date", background="#e9f7ef", foreground="#1e8449")
-        self.tree.tag_configure("unknown", background="#fdf4e3", foreground="#9c640c")
+        self.tree.tag_configure("needs update", background="#fff2f0", foreground=self.ALERT_COLOR)
+        self.tree.tag_configure("up-to-date", background="#f2fbf7", foreground="#1b8a5f")
+        self.tree.tag_configure("unknown", background="#f7f5ed", foreground="#9c640c")
 
     def _build_notes_panel(self) -> None:
         notes_frame = tk.LabelFrame(
-            self.content,
+            self.root,
             text="Note di sicurezza",
-            bg=self.BG_COLOR,
-            fg=self.ACCENT_COLOR,
-            labelanchor="nw",
-            padx=12,
-            pady=8,
+            bg=self.PANEL_COLOR,
+            fg=self.TEXT_COLOR,
+            font=("Inter", 12, "bold"),
         )
-        notes_frame.pack(fill="both", expand=False, padx=24, pady=(0, 16))
+        notes_frame.pack(fill="both", expand=False, padx=16, pady=(0, 16))
 
         self.notes_box = tk.Text(
-            notes_frame,
+            notes_container,
             height=8,
             bg=self.PANEL_COLOR,
             fg=self.TEXT_COLOR,
             insertbackground=self.TEXT_COLOR,
-            font=("Consolas", 10),
+            font=("Inter", 10),
             relief="flat",
             wrap="word",
             state="disabled",
@@ -298,8 +306,8 @@ class SBOMCheckerGUI:
                         self.notes_box.insert("end", f"    • {line}\n")
                 self.notes_box.insert("end", "\n")
 
-        self.notes_box.tag_configure("title", foreground=self.ACCENT_COLOR, font=("Segoe UI", 11, "bold"))
-        self.notes_box.tag_configure("subtitle", foreground=self.MUTED_TEXT_COLOR, font=("Segoe UI", 10, "bold"))
+        self.notes_box.tag_configure("title", foreground=self.ACCENT_COLOR, font=("Inter", 11, "bold"))
+        self.notes_box.tag_configure("subtitle", foreground=self.MUTED_TEXT_COLOR, font=("Inter", 10, "bold"))
         self.notes_box.config(state="disabled")
 
     def _update_summary(self, data) -> None:
