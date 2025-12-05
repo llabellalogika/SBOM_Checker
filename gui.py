@@ -144,14 +144,21 @@ class SBOMCheckerGUI:
         self._build_header()
         self._build_controls()
 
-        self.body = tk.Frame(self.content, bg=self.BG_COLOR)
+        self.body = tk.PanedWindow(
+            self.content,
+            orient=tk.VERTICAL,
+            bg=self.BG_COLOR,
+            sashwidth=8,
+            sashrelief="flat",
+            borderwidth=0,
+            relief="flat",
+            showhandle=False,
+        )
         self.body.pack(fill="both", expand=True, padx=16, pady=(0, 16))
-        self.body.grid_rowconfigure(0, weight=1)
-        self.body.grid_rowconfigure(1, weight=1)
-        self.body.grid_columnconfigure(0, weight=1)
 
         self._build_table()
         self._build_notes_panel()
+        self.root.after(50, self._set_initial_split)
 
     def _build_header(self) -> None:
         header = tk.Frame(self.content, bg=self.BG_COLOR)
@@ -219,7 +226,7 @@ class SBOMCheckerGUI:
 
     def _build_table(self) -> None:
         table_frame = tk.Frame(self.body, bg=self.BG_COLOR)
-        table_frame.grid(row=0, column=0, sticky="nsew")
+        self.body.add(table_frame, minsize=150, stretch="always")
 
         columns = [h for h in HEADERS]
         self.tree = ttk.Treeview(
@@ -260,11 +267,11 @@ class SBOMCheckerGUI:
             fg=self.TEXT_COLOR,
             font=("Inter", 12, "bold"),
         )
-        notes_frame.grid(row=1, column=0, sticky="nsew", pady=(12, 0))
+        self.body.add(notes_frame, minsize=200, stretch="always")
 
         self.notes_box = tk.Text(
             notes_frame,  # fix: era notes_container
-            height=8,
+            height=12,
             bg=self.PANEL_COLOR,
             fg=self.TEXT_COLOR,
             insertbackground=self.TEXT_COLOR,
@@ -274,6 +281,21 @@ class SBOMCheckerGUI:
             state="disabled",
         )
         self.notes_box.pack(fill="both", expand=True)
+
+    def _set_initial_split(self) -> None:
+        """Set the split so that the release notes occupy roughly half the window."""
+
+        self.root.update_idletasks()
+        total_height = self.body.winfo_height()
+        if total_height <= 0:
+            return
+
+        midpoint = total_height // 2
+        try:
+            self.body.sash_place(0, 0, midpoint)
+        except tk.TclError:
+            # In rare cases the paned window may not be ready yet; try again shortly.
+            self.root.after(50, self._set_initial_split)
 
     def _on_select_file(self) -> None:
         filepath = filedialog.askopenfilename(
