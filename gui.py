@@ -12,10 +12,10 @@ from core.version_resolver import risolvi_versioni
 class SBOMCheckerGUI:
     BG_COLOR = "#f6fbff"
     PANEL_COLOR = "#ffffff"
-    ACCENT_COLOR = "#3da9ff"
+    ACCENT_COLOR = "#fada5e"
     ALERT_COLOR = "#e86b5d"
-    TEXT_COLOR = "#1f2a44"
-    MUTED_TEXT_COLOR = "#60708f"
+    TEXT_COLOR = "#8cb155"
+    MUTED_TEXT_COLOR = "#6f7f3a"
     SIDEBAR_COLOR = "#e8f0fb"  # sidebar color
 
     LIBRARY_LINKS = {
@@ -65,7 +65,7 @@ class SBOMCheckerGUI:
         )
         style.map(
             "Treeview",
-            background=[("selected", "#e7f4ff")],
+            background=[("selected", "#fff7d6")],
             foreground=[("selected", self.TEXT_COLOR)],
         )
 
@@ -77,11 +77,11 @@ class SBOMCheckerGUI:
             borderwidth=0,
             relief="flat",
             background=self.ACCENT_COLOR,
-            foreground="#ffffff",
+            foreground=self.TEXT_COLOR,
         )
         style.map(
             "TButton",
-            background=[("active", "#1f8ed6")],
+            background=[("active", "#e0c54f")],
             relief=[("pressed", "flat")],
         )
         style.configure(
@@ -124,7 +124,7 @@ class SBOMCheckerGUI:
                 shortcuts,
                 text=icon,
                 font=("Segoe UI Emoji", 16),
-                fg=self.MUTED_TEXT_COLOR,
+                fg=self.TEXT_COLOR,
                 bg=self.SIDEBAR_COLOR,
                 activebackground=self.PANEL_COLOR,
                 activeforeground=self.ACCENT_COLOR,
@@ -400,10 +400,10 @@ class SBOMCheckerGUI:
             "needs update", background="#fff2f0", foreground=self.ALERT_COLOR
         )
         self.tree.tag_configure(
-            "up-to-date", background="#f2fbf7", foreground="#1b8a5f"
+            "up-to-date", background="#f0f6e5", foreground=self.TEXT_COLOR
         )
         self.tree.tag_configure(
-            "unknown", background="#f7f5ed", foreground="#9c640c"
+            "unknown", background="#fff7d6", foreground=self.ACCENT_COLOR
         )
 
         self._bind_mousewheel(self.tree)
@@ -612,7 +612,7 @@ class SBOMCheckerGUI:
             color = self.ALERT_COLOR
         else:
             text = "Tutte le librerie sono aggiornate"
-            color = self.ACCENT_COLOR
+            color = self.TEXT_COLOR
         self.update_label.config(text=text, fg=color)
 
     def _populate_library_view(self) -> None:
