@@ -8,10 +8,23 @@ def _normalizza(v: Optional[str]) -> str:
 
 
 def _sort_releases(releases: List[Dict[str, str]]) -> List[Dict[str, str]]:
-    return sorted(
-        releases,
-        key=lambda r: ((r.get("release_date") or ""), _normalizza(r.get("version"))),
-    )
+    def _version_key(version: Optional[str]):
+        cleaned = _normalizza(version)
+        key_parts = []
+        for part in cleaned.replace("-", ".").split("."):
+            try:
+                key_parts.append(int(part))
+            except ValueError:
+                key_parts.append(part)
+        return tuple(key_parts)
+
+    def _key(release: Dict[str, str]):
+        date = release.get("release_date") or ""
+        version_key = _version_key(release.get("version"))
+        # Entries without a release date are placed after dated releases and sorted by version.
+        return (0 if date else 1, date, version_key)
+
+    return sorted(releases, key=_key)
 
 
 def _is_security_update(flag: Optional[str]) -> bool:
