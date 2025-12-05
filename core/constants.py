@@ -1,4 +1,4 @@
-# Librerie firmware da monitorare
+# Firmware libraries to monitor
 FIRMWARE_LIBRARIES = {
     "FreeRTOS",
     "LwIP",

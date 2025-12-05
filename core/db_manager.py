@@ -19,7 +19,7 @@ def _ensure_connection():
 
 
 def _library_id(name: str) -> Optional[int]:
-    """Ritorna l'ID della libreria dal nome (case-insensitive)."""
+    """Returns the library ID for the given name (case-insensitive)."""
 
     _ensure_connection()
     if _cursor is None:
@@ -36,7 +36,7 @@ def _library_id(name: str) -> Optional[int]:
 
 
 def get_releases_for_library(name: str) -> List[Dict[str, str]]:
-    """Restituisce tutte le release per una libreria ordinate per data."""
+    """Returns all releases for a library ordered by date."""
 
     lib_id = _library_id(name)
     if lib_id is None:
@@ -66,7 +66,7 @@ def get_releases_for_library(name: str) -> List[Dict[str, str]]:
 
 
 def get_library_names() -> List[str]:
-    """Restituisce l'elenco delle librerie presenti a DB."""
+    """Returns the list of libraries present in the database."""
 
     _ensure_connection()
     if _cursor is None:

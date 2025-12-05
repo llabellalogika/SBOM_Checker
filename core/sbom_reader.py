@@ -6,7 +6,7 @@ from core.constants import FIRMWARE_LIBRARIES
 
 def _carica_cyclonedx_json(path: Path) -> List[Dict[str, str]]:
     """
-    Estrae [{name, version}] da CycloneDX JSON.
+    Extracts [{name, version}] from a CycloneDX JSON file.
     """
     try:
         data = json.load(path.open("r", encoding="utf-8"))
@@ -23,8 +23,8 @@ def _carica_cyclonedx_json(path: Path) -> List[Dict[str, str]]:
 
 def _carica_spdx_tag_value(path: Path) -> List[Dict[str, str]]:
     """
-    Parser minimale SPDX tag-value: coppie PackageName / PackageVersion.
-    Ritorna solo i package mappati nelle librerie target.
+    Minimal SPDX tag-value parser: pairs of PackageName / PackageVersion.
+    Returns only packages mapped to the target libraries.
     """
     NAME_MAP = {
         "freertos": "FreeRTOS",
@@ -69,7 +69,7 @@ def _carica_spdx_tag_value(path: Path) -> List[Dict[str, str]]:
         s = pkg_name.strip().lower()
         if s in NAME_MAP:
             return NAME_MAP[s]
-        # fallback euristico
+        # heuristic fallback
         if "freertos" in s: return "FreeRTOS"
         if "lwip" in s: return "LwIP"
         if "fatfs" in s or "fat-fs" in s: return "FatFs"
@@ -114,7 +114,7 @@ def _carica_spdx_tag_value(path: Path) -> List[Dict[str, str]]:
     except Exception:
         return []
 
-    # Deduplica per nome
+    # Deduplicate by name
     dedup = {}
     for c in components:
         if c["name"] not in dedup:
@@ -123,7 +123,7 @@ def _carica_spdx_tag_value(path: Path) -> List[Dict[str, str]]:
 
 def carica_sbom_generico(path: Path) -> List[Dict[str, str]]:
     """
-    Supporta CycloneDX JSON (*.json) e SPDX tag-value (*.spdx).
+    Supports CycloneDX JSON (*.json) and SPDX tag-value (*.spdx).
     """
     suffix = path.suffix.lower()
     if suffix == ".json":

@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 def _base_dir() -> Path:
-    # Supporto anche PyInstaller (sys.frozen)
+    # Support PyInstaller builds (sys.frozen)
     if getattr(sys, 'frozen', False):
         return Path(sys.executable).parent
     return Path(__file__).resolve().parent.parent
