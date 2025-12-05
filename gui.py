@@ -574,7 +574,7 @@ class SBOMCheckerGUI:
             1 for lib in data if lib.get("status") == "needs update"
         )
         if count_needs_update:
-            text = f"Librerie da aggiornare: {count_needs_update}"
+            text = f"Libraries to update: {count_needs_update}"
             color = self.ALERT_COLOR
         else:
             text = "Tutte le librerie sono aggiornate"
