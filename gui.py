@@ -190,7 +190,7 @@ class SBOMCheckerGUI:
 
         select_btn = ttk.Button(
             left,
-            text="Generate report",
+            text="Genera report",
             command=self._on_select_file,
             style="TButton",
         )
@@ -198,7 +198,7 @@ class SBOMCheckerGUI:
 
         clear_btn = ttk.Button(
             left,
-            text="Clear selection",
+            text="Cancella selezione",
             command=self._clear_selection,
             style="TButton",
         )
@@ -206,7 +206,7 @@ class SBOMCheckerGUI:
 
         self.selected_file_label = tk.Label(
             left,
-            text="No file selected",
+            text="Nessun file selezionato",
             fg=self.MUTED_TEXT_COLOR,
             bg=self.BG_COLOR,
             font=("Segoe UI", 10),
@@ -574,10 +574,10 @@ class SBOMCheckerGUI:
             1 for lib in data if lib.get("status") == "needs update"
         )
         if count_needs_update:
-            text = f"Libraries to update: {count_needs_update}"
+            text = f"Librerie da aggiornare: {count_needs_update}"
             color = self.ALERT_COLOR
         else:
-            text = "All libraries are up to date"
+            text = "Tutte le librerie sono aggiornate"
             color = self.ACCENT_COLOR
         self.update_label.config(text=text, fg=color)
 
