@@ -339,29 +339,61 @@ class SBOMCheckerGUI:
         self.notes_box.config(state="normal")
         self.notes_box.delete("1.0", "end")
 
+        cve_sections = [
+            lib
+            for lib in data
+            if any((rel.get("cve") or "").strip() for rel in lib.get("cve_notes", []))
+        ]
+
         notes_to_print = [lib for lib in data if lib.get("security_notes")]
-        if not notes_to_print:
+
+        if not cve_sections and not notes_to_print:
             self.notes_box.insert(
                 "end",
                 "Nessun aggiornamento di sicurezza rilevato nelle versioni successive.",
             )
         else:
-            for lib in notes_to_print:
-                self.notes_box.insert("end", f"{lib['name']}\n", ("title",))
-                for rel in lib["security_notes"]:
-                    version = rel.get("version", "")
-                    date = rel.get("release_date") or "data n/a"
-                    notes = rel.get("release_notes") or "Release notes non disponibili."
-                    cve = rel.get("cve") or ""
-                    self.notes_box.insert(
-                        "end", f"  - {version} ({date})\n", ("subtitle",)
-                    )
-                    for line in notes.splitlines():
-                        self.notes_box.insert("end", f"    • {line}\n")
-                    if cve:
+            if cve_sections:
+                self.notes_box.insert("end", "Elenco CVE\n", ("section",))
+                for lib in cve_sections:
+                    self.notes_box.insert("end", f"{lib['name']}\n", ("title",))
+                    for rel in lib.get("cve_notes", []):
+                        cve = (rel.get("cve") or "").strip()
+                        if not cve:
+                            continue
+                        version = rel.get("version", "")
+                        date = rel.get("release_date") or "data n/a"
+                        self.notes_box.insert(
+                            "end", f"  - {version} ({date})\n", ("subtitle",)
+                        )
                         for line in cve.splitlines():
-                            self.notes_box.insert("end", f"    CVE: {line}\n", ("cve",))
-                self.notes_box.insert("end", "\n")
+                            self.notes_box.insert(
+                                "end", f"    CVE: {line}\n", ("cve",)
+                            )
+                    self.notes_box.insert("end", "\n")
+
+            if notes_to_print:
+                if cve_sections:
+                    self.notes_box.insert("end", "\n")
+                self.notes_box.insert("end", "Note di sicurezza\n", ("section",))
+                for lib in notes_to_print:
+                    self.notes_box.insert("end", f"{lib['name']}\n", ("title",))
+                    for rel in lib["security_notes"]:
+                        version = rel.get("version", "")
+                        date = rel.get("release_date") or "data n/a"
+                        notes = rel.get("release_notes") or "Release notes non disponibili."
+                        cve = rel.get("cve") or ""
+                        self.notes_box.insert(
+                            "end", f"  - {version} ({date})\n", ("subtitle",)
+                        )
+                        for line in notes.splitlines():
+                            self.notes_box.insert("end", f"    • {line}\n")
+                        if cve:
+                            for line in cve.splitlines():
+                                self.notes_box.insert(
+                                    "end", f"    CVE: {line}\n", ("cve",)
+                                )
+                    self.notes_box.insert("end", "\n")
 
         self.notes_box.tag_configure(
             "title", foreground=self.ACCENT_COLOR, font=("Inter", 11, "bold")
@@ -375,6 +407,11 @@ class SBOMCheckerGUI:
             "cve",
             foreground=self.ALERT_COLOR,
             font=("Inter", 10, "bold"),
+        )
+        self.notes_box.tag_configure(
+            "section",
+            foreground=self.TEXT_COLOR,
+            font=("Inter", 12, "bold"),
         )
         self.notes_box.config(state="disabled")
 

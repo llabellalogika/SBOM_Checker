@@ -66,11 +66,15 @@ def risolvi_versioni(libs: List[Dict[str, str]]) -> List[Dict[str, str]]:
         if releases and current_release:
             idx = releases.index(current_release)
             intermediate = releases[idx + 1 :]
+            trailing_releases = releases[idx:]
         else:
             intermediate = []
+            trailing_releases = releases
 
         security_releases = [r for r in intermediate if _is_security_update(r.get("security"))]
         has_security_updates = bool(security_releases)
+
+        cve_releases = [r for r in trailing_releases if (r.get("cve") or "").strip()]
 
         if not releases or current_release is None:
             status = "unknown"
@@ -92,6 +96,7 @@ def risolvi_versioni(libs: List[Dict[str, str]]) -> List[Dict[str, str]]:
                 "security_label": security_label,
                 "status": status,
                 "security_notes": security_releases,
+                "cve_notes": cve_releases,
             }
         )
 
