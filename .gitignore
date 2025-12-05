@@ -1,2 +1,18 @@
+# Cartelle Visual Studio
+.vs/
+
+# Ambienti virtuali Python (se li usi)
+env/
+env1/
+venv/
+.venv/
+
+# File DB/SQLite di lavoro (se non vuoi versionarli)
+*.sqbpro
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache Python
 __pycache__/
 *.pyc
