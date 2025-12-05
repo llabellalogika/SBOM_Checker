@@ -14,7 +14,7 @@ class SBOMCheckerGUI:
     ALERT_COLOR = "#e86b5d"
     TEXT_COLOR = "#1f2a44"
     MUTED_TEXT_COLOR = "#60708f"
-    SIDEBAR_COLOR = "#e8f0fb"  # aggiunta: colore barra laterale
+    SIDEBAR_COLOR = "#e8f0fb"  # sidebar color
 
     def __init__(self) -> None:
         self.root = tk.Tk()
@@ -112,7 +112,7 @@ class SBOMCheckerGUI:
         shortcuts = tk.Frame(self.sidebar, bg=self.SIDEBAR_COLOR)
         shortcuts.pack(fill="both", expand=True)
 
-        for icon, _ in [("🏠", "Dashboard"), ("📄", "Report"), ("🛡️", "Sicurezza")]:
+        for icon, _ in [("🏠", "Dashboard"), ("📄", "Report"), ("🛡️", "Security")]:
             btn = tk.Button(
                 shortcuts,
                 text=icon,
@@ -175,7 +175,7 @@ class SBOMCheckerGUI:
 
         subtitle = tk.Label(
             header,
-            text="Genera report moderni a partire da file SBOM (.json o .spdx)",
+            text="Generate modern reports from SBOM files (.json or .spdx)",
             fg=self.MUTED_TEXT_COLOR,
             bg=self.BG_COLOR,
             font=("Inter", 11),
@@ -185,7 +185,7 @@ class SBOMCheckerGUI:
     def _open_menu(self) -> None:
         messagebox.showinfo(
             "Menu",
-            "Seleziona un file SBOM dalla schermata principale per generare il report.",
+            "Select an SBOM file from the main screen to generate the report.",
         )
 
     def _build_controls(self) -> None:
@@ -197,7 +197,7 @@ class SBOMCheckerGUI:
 
         select_btn = ttk.Button(
             left,
-            text="Genera report",
+            text="Generate report",
             command=self._on_select_file,
             style="TButton",
         )
@@ -205,7 +205,7 @@ class SBOMCheckerGUI:
 
         clear_btn = ttk.Button(
             left,
-            text="Cancella selezione",
+            text="Clear selection",
             command=self._clear_selection,
             style="TButton",
         )
@@ -213,7 +213,7 @@ class SBOMCheckerGUI:
 
         self.selected_file_label = tk.Label(
             left,
-            text="Nessun file selezionato",
+            text="No file selected",
             fg=self.MUTED_TEXT_COLOR,
             bg=self.BG_COLOR,
             font=("Segoe UI", 10),
@@ -270,7 +270,7 @@ class SBOMCheckerGUI:
     def _build_notes_panel(self) -> None:
         notes_frame = tk.LabelFrame(
             self.body,
-            text="Note di sicurezza",
+            text="Security notes",
             bg=self.PANEL_COLOR,
             fg=self.TEXT_COLOR,
             font=("Inter", 12, "bold"),
@@ -278,7 +278,7 @@ class SBOMCheckerGUI:
         self.body.add(notes_frame, minsize=200, stretch="always")
 
         self.notes_box = tk.Text(
-            notes_frame,  # fix: era notes_container
+            notes_frame,  # fix: previously notes_container
             height=12,
             bg=self.PANEL_COLOR,
             fg=self.TEXT_COLOR,
@@ -307,8 +307,8 @@ class SBOMCheckerGUI:
 
     def _on_select_file(self) -> None:
         filepath = filedialog.askopenfilename(
-            title="Seleziona un file SBOM",
-            filetypes=[("SBOM files", "*.json *.spdx"), ("Tutti i file", "*.*")],
+            title="Select an SBOM file",
+            filetypes=[("SBOM files", "*.json *.spdx"), ("All files", "*.*")],
         )
         if not filepath:
             return
@@ -321,7 +321,7 @@ class SBOMCheckerGUI:
             data = risolvi_versioni(libs)
         except Exception as exc:
             messagebox.showerror(
-                "Errore", f"Impossibile leggere il file SBOM:\n{exc}"
+                "Error", f"Unable to read the SBOM file:\n{exc}"
             )
             return
 
@@ -332,7 +332,7 @@ class SBOMCheckerGUI:
 
     def _clear_selection(self) -> None:
         self.selected_file_label.config(
-            text="Nessun file selezionato", fg=self.MUTED_TEXT_COLOR
+            text="No file selected", fg=self.MUTED_TEXT_COLOR
         )
         self.tree.delete(*self.tree.get_children())
         self.notes_box.config(state="normal")
@@ -368,11 +368,11 @@ class SBOMCheckerGUI:
         if not cve_sections and not notes_to_print:
             self.notes_box.insert(
                 "end",
-                "Nessun aggiornamento di sicurezza rilevato nelle versioni successive.",
+                "No security updates detected in later versions.",
             )
         else:
             if cve_sections:
-                self.notes_box.insert("end", "Elenco CVE\n", ("section",))
+                self.notes_box.insert("end", "CVE list\n", ("section",))
                 for lib in cve_sections:
                     self.notes_box.insert("end", f"{lib['name']}\n", ("title",))
                     for rel in lib.get("cve_notes", []):
@@ -380,7 +380,7 @@ class SBOMCheckerGUI:
                         if not cve:
                             continue
                         version = rel.get("version", "")
-                        date = rel.get("release_date") or "data n/a"
+                        date = rel.get("release_date") or "date n/a"
                         self.notes_box.insert(
                             "end", f"  - {version} ({date})\n", ("subtitle",)
                         )
@@ -393,13 +393,13 @@ class SBOMCheckerGUI:
             if notes_to_print:
                 if cve_sections:
                     self.notes_box.insert("end", "\n")
-                self.notes_box.insert("end", "Note di sicurezza\n", ("section",))
+                self.notes_box.insert("end", "Security notes\n", ("section",))
                 for lib in notes_to_print:
                     self.notes_box.insert("end", f"{lib['name']}\n", ("title",))
                     for rel in lib["security_notes"]:
                         version = rel.get("version", "")
-                        date = rel.get("release_date") or "data n/a"
-                        notes = rel.get("release_notes") or "Release notes non disponibili."
+                        date = rel.get("release_date") or "date n/a"
+                        notes = rel.get("release_notes") or "Release notes not available."
                         cve = rel.get("cve") or ""
                         self.notes_box.insert(
                             "end", f"  - {version} ({date})\n", ("subtitle",)
@@ -438,10 +438,10 @@ class SBOMCheckerGUI:
             1 for lib in data if lib.get("status") == "needs update"
         )
         if count_needs_update:
-            text = f"Librerie da aggiornare: {count_needs_update}"
+            text = f"Libraries to update: {count_needs_update}"
             color = self.ALERT_COLOR
         else:
-            text = "Tutte le librerie risultano aggiornate"
+            text = "All libraries are up to date"
             color = self.ACCENT_COLOR
         self.update_label.config(text=text, fg=color)
 

@@ -1,27 +1,27 @@
 # SBOM_Checker
 
-Strumento per analizzare SBOM in formato CycloneDX JSON o SPDX tag-value e verificare se le librerie firmware risultano aggiornate o richiedono update di sicurezza.
+Tool to analyze SBOMs in CycloneDX JSON or SPDX tag-value format and verify whether firmware libraries are up to date or require security updates.
 
 ## CLI
 
-Esegui la versione a riga di comando con:
+Run the command-line version with:
 
 ```bash
 python main.py
 ```
 
-I file SBOM vengono letti da `data/sbom` e viene mostrato il report testuale già presente nel progetto.
+SBOM files are read from `data/sbom` and the existing text report is displayed.
 
 ## GUI
 
-È disponibile una piccola interfaccia grafica desktop (Tkinter) per generare lo stesso report senza usare il terminale:
+A small desktop GUI (Tkinter) is available to generate the same report without using the terminal:
 
 ```bash
 python gui.py
 ```
 
-La finestra permette di selezionare un file SBOM dal proprio PC (`.json` o `.spdx`) e mostra:
+The window lets you pick an SBOM file from your computer (`.json` or `.spdx`) and shows:
 
-- la tabella con le versioni corrente/ultima e lo stato di sicurezza,
-- il conteggio delle librerie che richiedono aggiornamenti,
-- le release note di sicurezza quando presenti.
+- the table with current/latest versions and the security status,
+- the count of libraries that require updates,
+- any available security release notes.
