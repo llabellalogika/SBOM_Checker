@@ -353,6 +353,7 @@ class SBOMCheckerGUI:
 
         self.library_canvas = canvas
         self._populate_library_view()
+        self._bind_mousewheel(canvas)
 
     def _show_view(self, key: str) -> None:
         for name, frame in self.views.items():
@@ -405,6 +406,8 @@ class SBOMCheckerGUI:
             "unknown", background="#f7f5ed", foreground="#9c640c"
         )
 
+        self._bind_mousewheel(self.tree)
+
     def _build_notes_panel(self) -> None:
         notes_frame = tk.LabelFrame(
             self.body,
@@ -428,6 +431,8 @@ class SBOMCheckerGUI:
         )
         self.notes_box.pack(fill="both", expand=True)
 
+        self._bind_mousewheel(self.notes_box)
+
     def _set_initial_split(self) -> None:
         """Set the split so that the release notes occupy roughly half the window."""
 
@@ -442,6 +447,35 @@ class SBOMCheckerGUI:
         except tk.TclError:
             # In rare cases the paned window may not be ready yet; try again shortly.
             self.root.after(50, self._set_initial_split)
+
+    def _bind_mousewheel(self, widget: tk.Widget) -> None:
+        """Enable mouse wheel scrolling for a given widget across platforms."""
+
+        def _unbound() -> None:
+            for sequence in ("<MouseWheel>", "<Button-4>", "<Button-5>"):
+                self.root.unbind_all(sequence)
+
+        def _bind_to(event: tk.Event) -> None:  # type: ignore[override]
+            _unbound()
+            self.root.bind_all("<MouseWheel>", lambda e: self._on_mousewheel(widget, e))
+            self.root.bind_all("<Button-4>", lambda e: self._on_mousewheel(widget, e))
+            self.root.bind_all("<Button-5>", lambda e: self._on_mousewheel(widget, e))
+
+        widget.bind("<Enter>", _bind_to)
+        widget.bind("<Leave>", lambda _evt: _unbound())
+
+    def _on_mousewheel(self, widget: tk.Widget, event: tk.Event) -> None:  # type: ignore[override]
+        if not hasattr(widget, "yview_scroll"):
+            return
+
+        if getattr(event, "num", None) == 4:
+            direction = -1
+        elif getattr(event, "num", None) == 5:
+            direction = 1
+        else:
+            direction = -1 if event.delta > 0 else 1
+
+        widget.yview_scroll(direction, "units")
 
     def _on_select_file(self) -> None:
         filepath = filedialog.askopenfilename(
