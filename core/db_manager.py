@@ -44,20 +44,21 @@ def get_releases_for_library(name: str) -> List[Dict[str, str]]:
 
     try:
         _cursor.execute(
-            'SELECT version, release_notes, release_date, security '\
+            'SELECT version, release_notes, release_date, security, cve '\
             'FROM "ReleaseNotes" WHERE "IDLibraries" = ? '
             'ORDER BY COALESCE(release_date, "") ASC, version ASC',
             (lib_id,),
         )
         rows = _cursor.fetchall() or []
         releases = []
-        for version, notes, rel_date, security in rows:
+        for version, notes, rel_date, security, cve in rows:
             releases.append(
                 {
                     "version": version,
                     "release_notes": notes or "",
                     "release_date": rel_date,
                     "security": security,
+                    "cve": cve or "",
                 }
             )
         return releases
