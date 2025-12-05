@@ -8,10 +8,23 @@ def _normalizza(v: Optional[str]) -> str:
 
 
 def _sort_releases(releases: List[Dict[str, str]]) -> List[Dict[str, str]]:
-    return sorted(
-        releases,
-        key=lambda r: ((r.get("release_date") or ""), _normalizza(r.get("version"))),
-    )
+    def _version_key(version: Optional[str]):
+        cleaned = _normalizza(version)
+        key_parts = []
+        for part in cleaned.replace("-", ".").split("."):
+            try:
+                key_parts.append(int(part))
+            except ValueError:
+                key_parts.append(part)
+        return tuple(key_parts)
+
+    def _key(release: Dict[str, str]):
+        date = release.get("release_date") or ""
+        version_key = _version_key(release.get("version"))
+        # Entries without a release date are placed after dated releases and sorted by version.
+        return (0 if date else 1, date, version_key)
+
+    return sorted(releases, key=_key)
 
 
 def _is_security_update(flag: Optional[str]) -> bool:
@@ -53,11 +66,15 @@ def risolvi_versioni(libs: List[Dict[str, str]]) -> List[Dict[str, str]]:
         if releases and current_release:
             idx = releases.index(current_release)
             intermediate = releases[idx + 1 :]
+            trailing_releases = releases[idx:]
         else:
             intermediate = []
+            trailing_releases = releases
 
         security_releases = [r for r in intermediate if _is_security_update(r.get("security"))]
         has_security_updates = bool(security_releases)
+
+        cve_releases = [r for r in trailing_releases if (r.get("cve") or "").strip()]
 
         if not releases or current_release is None:
             status = "unknown"
@@ -79,6 +96,7 @@ def risolvi_versioni(libs: List[Dict[str, str]]) -> List[Dict[str, str]]:
                 "security_label": security_label,
                 "status": status,
                 "security_notes": security_releases,
+                "cve_notes": cve_releases,
             }
         )
 
