@@ -14,6 +14,7 @@ class SBOMCheckerGUI:
     ALERT_COLOR = "#e86b5d"
     TEXT_COLOR = "#1f2a44"
     MUTED_TEXT_COLOR = "#60708f"
+    SIDEBAR_COLOR = "#e8f0fb"  # aggiunta: colore barra laterale
 
     def __init__(self) -> None:
         self.root = tk.Tk()
@@ -77,7 +78,11 @@ class SBOMCheckerGUI:
             borderwidth=0,
             relief="flat",
         )
-        style.configure("CardHeading.TLabel", font=("Segoe UI", 11, "bold"), foreground=self.TEXT_COLOR)
+        style.configure(
+            "CardHeading.TLabel",
+            font=("Segoe UI", 11, "bold"),
+            foreground=self.TEXT_COLOR,
+        )
 
     def _build_sidebar(self) -> None:
         spacer = tk.Frame(self.sidebar, bg=self.SIDEBAR_COLOR, height=24)
@@ -135,13 +140,14 @@ class SBOMCheckerGUI:
 
         self.content = tk.Frame(main_container, bg=self.BG_COLOR)
         self.content.pack(side="left", fill="both", expand=True)
+
         self._build_header()
         self._build_controls()
         self._build_table()
         self._build_notes_panel()
 
     def _build_header(self) -> None:
-        header = tk.Frame(self.root, bg=self.BG_COLOR)
+        header = tk.Frame(self.content, bg=self.BG_COLOR)
         header.pack(fill="x", pady=(16, 8), padx=16)
 
         title = tk.Label(
@@ -163,13 +169,16 @@ class SBOMCheckerGUI:
         subtitle.pack(anchor="w")
 
     def _open_menu(self) -> None:
-        messagebox.showinfo("Menu", "Seleziona un file SBOM dalla schermata principale per generare il report.")
+        messagebox.showinfo(
+            "Menu",
+            "Seleziona un file SBOM dalla schermata principale per generare il report.",
+        )
 
     def _build_controls(self) -> None:
-        controls = tk.Frame(self.root, bg=self.BG_COLOR)
+        controls = tk.Frame(self.content, bg=self.BG_COLOR)
         controls.pack(fill="x", padx=16, pady=(0, 12))
 
-        left = tk.Frame(controls, bg=self.PANEL_COLOR)
+        left = tk.Frame(controls, bg=self.BG_COLOR)
         left.pack(side="left", padx=(4, 0), pady=8)
 
         select_btn = ttk.Button(
@@ -189,7 +198,7 @@ class SBOMCheckerGUI:
         )
         self.selected_file_label.pack(side="left", padx=12)
 
-        summary = tk.Frame(controls, bg=self.PANEL_COLOR)
+        summary = tk.Frame(controls, bg=self.BG_COLOR)
         summary.pack(side="right", padx=8, pady=8)
 
         self.update_label = tk.Label(
@@ -202,7 +211,7 @@ class SBOMCheckerGUI:
         self.update_label.pack(side="right")
 
     def _build_table(self) -> None:
-        table_frame = tk.Frame(self.root, bg=self.BG_COLOR)
+        table_frame = tk.Frame(self.content, bg=self.BG_COLOR)
         table_frame.pack(fill="both", expand=True, padx=16, pady=(0, 12))
 
         columns = [h for h in HEADERS]
@@ -226,13 +235,19 @@ class SBOMCheckerGUI:
         table_frame.grid_rowconfigure(0, weight=1)
         table_frame.grid_columnconfigure(0, weight=1)
 
-        self.tree.tag_configure("needs update", background="#fff2f0", foreground=self.ALERT_COLOR)
-        self.tree.tag_configure("up-to-date", background="#f2fbf7", foreground="#1b8a5f")
-        self.tree.tag_configure("unknown", background="#f7f5ed", foreground="#9c640c")
+        self.tree.tag_configure(
+            "needs update", background="#fff2f0", foreground=self.ALERT_COLOR
+        )
+        self.tree.tag_configure(
+            "up-to-date", background="#f2fbf7", foreground="#1b8a5f"
+        )
+        self.tree.tag_configure(
+            "unknown", background="#f7f5ed", foreground="#9c640c"
+        )
 
     def _build_notes_panel(self) -> None:
         notes_frame = tk.LabelFrame(
-            self.root,
+            self.content,
             text="Note di sicurezza",
             bg=self.PANEL_COLOR,
             fg=self.TEXT_COLOR,
@@ -241,7 +256,7 @@ class SBOMCheckerGUI:
         notes_frame.pack(fill="both", expand=False, padx=16, pady=(0, 16))
 
         self.notes_box = tk.Text(
-            notes_container,
+            notes_frame,  # fix: era notes_container
             height=8,
             bg=self.PANEL_COLOR,
             fg=self.TEXT_COLOR,
@@ -268,7 +283,9 @@ class SBOMCheckerGUI:
             libs = estrai_librerie(comps)
             data = risolvi_versioni(libs)
         except Exception as exc:
-            messagebox.showerror("Errore", f"Impossibile leggere il file SBOM:\n{exc}")
+            messagebox.showerror(
+                "Errore", f"Impossibile leggere il file SBOM:\n{exc}"
+            )
             return
 
         self.selected_file_label.config(text=path.name, fg=self.TEXT_COLOR)
@@ -285,7 +302,9 @@ class SBOMCheckerGUI:
                 lib.get("latest", ""),
                 lib.get("security_label", ""),
             )
-            self.tree.insert("", "end", values=values, tags=(lib.get("status", ""),))
+            self.tree.insert(
+                "", "end", values=values, tags=(lib.get("status", ""),)
+            )
 
     def _populate_notes(self, data) -> None:
         self.notes_box.config(state="normal")
@@ -293,7 +312,10 @@ class SBOMCheckerGUI:
 
         notes_to_print = [lib for lib in data if lib.get("security_notes")]
         if not notes_to_print:
-            self.notes_box.insert("end", "Nessun aggiornamento di sicurezza rilevato nelle versioni successive.")
+            self.notes_box.insert(
+                "end",
+                "Nessun aggiornamento di sicurezza rilevato nelle versioni successive.",
+            )
         else:
             for lib in notes_to_print:
                 self.notes_box.insert("end", f"{lib['name']}\n", ("title",))
@@ -301,17 +323,27 @@ class SBOMCheckerGUI:
                     version = rel.get("version", "")
                     date = rel.get("release_date") or "data n/a"
                     notes = rel.get("release_notes") or "Release notes non disponibili."
-                    self.notes_box.insert("end", f"  - {version} ({date})\n", ("subtitle",))
+                    self.notes_box.insert(
+                        "end", f"  - {version} ({date})\n", ("subtitle",)
+                    )
                     for line in notes.splitlines():
                         self.notes_box.insert("end", f"    • {line}\n")
                 self.notes_box.insert("end", "\n")
 
-        self.notes_box.tag_configure("title", foreground=self.ACCENT_COLOR, font=("Inter", 11, "bold"))
-        self.notes_box.tag_configure("subtitle", foreground=self.MUTED_TEXT_COLOR, font=("Inter", 10, "bold"))
+        self.notes_box.tag_configure(
+            "title", foreground=self.ACCENT_COLOR, font=("Inter", 11, "bold")
+        )
+        self.notes_box.tag_configure(
+            "subtitle",
+            foreground=self.MUTED_TEXT_COLOR,
+            font=("Inter", 10, "bold"),
+        )
         self.notes_box.config(state="disabled")
 
     def _update_summary(self, data) -> None:
-        count_needs_update = sum(1 for lib in data if lib.get("status") == "needs update")
+        count_needs_update = sum(
+            1 for lib in data if lib.get("status") == "needs update"
+        )
         if count_needs_update:
             text = f"Librerie da aggiornare: {count_needs_update}"
             color = self.ALERT_COLOR
