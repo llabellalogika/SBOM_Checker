@@ -175,7 +175,7 @@ class SBOMCheckerGUI:
 
         subtitle = tk.Label(
             header,
-            text="Visualizza e controlla la SBOM caricata (.json o .spdx)",
+            text="View and inspect the loaded SBOM (.json or .spdx)",
             fg=self.MUTED_TEXT_COLOR,
             bg=self.BG_COLOR,
             font=("Inter", 11),
@@ -259,7 +259,7 @@ class SBOMCheckerGUI:
 
         subtitle = tk.Label(
             header,
-            text="Un prodotto Logika Control S.r.l.",
+            text="A product by Logika Control S.r.l.",
             fg=self.MUTED_TEXT_COLOR,
             bg=self.BG_COLOR,
             font=("Inter", 11),
@@ -270,14 +270,14 @@ class SBOMCheckerGUI:
         content.pack(fill="both", expand=True, padx=16, pady=16)
 
         description = (
-            "Logika SBOM Checker facilita il controllo delle distinte software "
-            "per firmware STM32, consentendo di caricare una SBOM, verificarne le versioni "
-            "e valutare la presenza di aggiornamenti di sicurezza disponibili."
+            "Logika SBOM Checker streamlines the validation of software bills of materials "
+            "for STM32 firmware. Load an SBOM, review library versions, and check whether "
+            "newer security updates are available."
         )
 
         tk.Label(
             content,
-            text="Descrizione dell'applicazione",
+            text="Application description",
             bg=self.BG_COLOR,
             fg=self.TEXT_COLOR,
             font=("Inter", 14, "bold"),
@@ -302,7 +302,7 @@ class SBOMCheckerGUI:
 
         title = tk.Label(
             header,
-            text="Librerie supportate",
+            text="Supported libraries",
             fg=self.ACCENT_COLOR,
             bg=self.BG_COLOR,
             font=("Inter", 18, "bold"),
@@ -311,7 +311,7 @@ class SBOMCheckerGUI:
 
         tk.Label(
             header,
-            text="Versioni basate sui rilasci STM32CubeH7 (STM32CubeH7 GitHub)",
+            text="Versions based on STM32CubeH7 releases (STM32CubeH7 GitHub)",
             fg=self.MUTED_TEXT_COLOR,
             bg=self.BG_COLOR,
             font=("Inter", 11),
@@ -320,8 +320,8 @@ class SBOMCheckerGUI:
         disclaimer = tk.Label(
             libraries_view,
             text=(
-                "Le versioni delle librerie fanno riferimento al repository STM32CubeH7 "
-                "di STMicroelectronics: https://github.com/STMicroelectronics/STM32CubeH7"
+                "Library versions reference the STMicroelectronics STM32CubeH7 repository: "
+                "https://github.com/STMicroelectronics/STM32CubeH7"
             ),
             fg=self.TEXT_COLOR,
             bg=self.BG_COLOR,
@@ -469,9 +469,7 @@ class SBOMCheckerGUI:
         self._update_summary(data)
 
     def _clear_selection(self) -> None:
-        self.selected_file_label.config(
-            text="Nessun file selezionato", fg=self.MUTED_TEXT_COLOR
-        )
+        self.selected_file_label.config(text="No file selected", fg=self.MUTED_TEXT_COLOR)
         self.tree.delete(*self.tree.get_children())
         self.notes_box.config(state="normal")
         self.notes_box.delete("1.0", "end")
@@ -591,7 +589,7 @@ class SBOMCheckerGUI:
         if not names:
             tk.Label(
                 self.library_list_frame,
-                text="Nessuna libreria trovata nel database.",
+                text="No libraries found in the database.",
                 bg=self.BG_COLOR,
                 fg=self.TEXT_COLOR,
                 font=("Inter", 12),
@@ -635,7 +633,7 @@ class SBOMCheckerGUI:
             if releases:
                 for rel in releases:
                     version = rel.get("version") or "n/a"
-                    date = rel.get("release_date") or "data n/a"
+                    date = rel.get("release_date") or "date n/a"
                     tk.Label(
                         versions_frame,
                         text=f"- {version} ({date})",
@@ -648,7 +646,7 @@ class SBOMCheckerGUI:
             else:
                 tk.Label(
                     versions_frame,
-                    text="Nessuna versione disponibile",
+                    text="No versions available",
                     bg=self.BG_COLOR,
                     fg=self.MUTED_TEXT_COLOR,
                     font=("Inter", 11),
