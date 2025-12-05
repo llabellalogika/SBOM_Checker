@@ -206,7 +206,7 @@ class SBOMCheckerGUI:
 
         self.selected_file_label = tk.Label(
             left,
-            text="Nessun file selezionato",
+            text="No file selected",
             fg=self.MUTED_TEXT_COLOR,
             bg=self.BG_COLOR,
             font=("Segoe UI", 10),
