@@ -1,7 +1,9 @@
 import tkinter as tk
+import webbrowser
 from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
 
+from core.db_manager import get_library_names, get_releases_for_library
 from core.report_generator import HEADERS
 from core.sbom_reader import carica_sbom_generico, estrai_librerie
 from core.version_resolver import risolvi_versioni
@@ -15,6 +17,22 @@ class SBOMCheckerGUI:
     TEXT_COLOR = "#1f2a44"
     MUTED_TEXT_COLOR = "#60708f"
     SIDEBAR_COLOR = "#e8f0fb"  # sidebar color
+
+    LIBRARY_LINKS = {
+        "FreeRTOS": "https://www.freertos.org/",
+        "LwIP": "https://www.nongnu.org/lwip/",
+        "FatFs": "http://elm-chan.org/fsw/ff/00index_e.html",
+        "mbedTLS": "https://github.com/Mbed-TLS/mbedtls",
+        "LibJPEG": "https://libjpeg.sourceforge.io/",
+        "OpenAMP": "https://www.openampproject.org/",
+        "STM32_USB_Device_Library": "https://github.com/STMicroelectronics/STM32CubeH7",
+        "STM32_USB_Host_Library": "https://github.com/STMicroelectronics/STM32CubeH7",
+        "TouchGFX": "https://touchgfx.com/",
+        "STemWin": "https://www.st.com/en/embedded-software/stemwin.html",
+        "STM32_Audio": "https://www.st.com/en/embedded-software/stm32-audio-software.html",
+        "STM32H7xx_HAL_Driver": "https://github.com/STMicroelectronics/STM32CubeH7",
+        "CMSIS-RTOS": "https://www.keil.com/pack/doc/CMSIS/RTOS/",
+    }
 
     def __init__(self) -> None:
         self.root = tk.Tk()
@@ -88,31 +106,20 @@ class SBOMCheckerGUI:
         spacer = tk.Frame(self.sidebar, bg=self.SIDEBAR_COLOR, height=24)
         spacer.pack()
 
-        menu_button = tk.Button(
-            self.sidebar,
-            text="☰",
-            command=self._open_menu,
-            font=("Segoe UI", 16, "bold"),
-            fg=self.TEXT_COLOR,
-            bg=self.SIDEBAR_COLOR,
-            activebackground=self.PANEL_COLOR,
-            activeforeground=self.ACCENT_COLOR,
-            relief="flat",
-            bd=0,
-            highlightthickness=0,
-            cursor="hand2",
-            width=3,
-            pady=10,
-        )
-        menu_button.pack(pady=(8, 16))
-
         accent_bar = tk.Frame(self.sidebar, bg=self.ACCENT_COLOR, width=2)
         accent_bar.pack(fill="y", side="left")
 
         shortcuts = tk.Frame(self.sidebar, bg=self.SIDEBAR_COLOR)
         shortcuts.pack(fill="both", expand=True)
 
-        for icon, _ in [("🏠", "Dashboard"), ("📄", "Report"), ("🛡️", "Security")]:
+        self.sidebar_buttons = {}
+        buttons = [
+            ("📄", "sbom", lambda: self._show_view("sbom")),
+            ("☰", "about", lambda: self._show_view("about")),
+            ("🛡️", "libraries", lambda: self._show_view("libraries")),
+        ]
+
+        for icon, key, command in buttons:
             btn = tk.Button(
                 shortcuts,
                 text=icon,
@@ -126,8 +133,10 @@ class SBOMCheckerGUI:
                 highlightthickness=0,
                 cursor="hand2",
                 pady=10,
+                command=command,
             )
             btn.pack(pady=6)
+            self.sidebar_buttons[key] = btn
 
     def _build_layout(self) -> None:
         main_container = tk.Frame(self.root, bg=self.BG_COLOR)
@@ -138,35 +147,26 @@ class SBOMCheckerGUI:
         self.sidebar.pack_propagate(False)
         self._build_sidebar()
 
-        self.content = tk.Frame(main_container, bg=self.BG_COLOR)
-        self.content.pack(side="left", fill="both", expand=True)
+        self.content_container = tk.Frame(main_container, bg=self.BG_COLOR)
+        self.content_container.pack(side="left", fill="both", expand=True)
 
-        self._build_header()
-        self._build_controls()
+        self.views = {}
+        self._build_sbom_view()
+        self._build_about_view()
+        self._build_libraries_view()
 
-        self.body = tk.PanedWindow(
-            self.content,
-            orient=tk.VERTICAL,
-            bg=self.BG_COLOR,
-            sashwidth=8,
-            sashrelief="flat",
-            borderwidth=0,
-            relief="flat",
-            showhandle=False,
-        )
-        self.body.pack(fill="both", expand=True, padx=16, pady=(0, 16))
+        self._show_view("sbom")
 
-        self._build_table()
-        self._build_notes_panel()
-        self.root.after(50, self._set_initial_split)
+    def _build_sbom_view(self) -> None:
+        sbom_view = tk.Frame(self.content_container, bg=self.BG_COLOR)
+        self.views["sbom"] = sbom_view
 
-    def _build_header(self) -> None:
-        header = tk.Frame(self.content, bg=self.BG_COLOR)
+        header = tk.Frame(sbom_view, bg=self.BG_COLOR)
         header.pack(fill="x", pady=(16, 8), padx=16)
 
         title = tk.Label(
             header,
-            text="Firmware SBOM Checker",
+            text="Logika SBOM Checker",
             fg=self.ACCENT_COLOR,
             bg=self.BG_COLOR,
             font=("Inter", 18, "bold"),
@@ -175,21 +175,14 @@ class SBOMCheckerGUI:
 
         subtitle = tk.Label(
             header,
-            text="Generate modern reports from SBOM files (.json or .spdx)",
+            text="Visualizza e controlla la SBOM caricata (.json o .spdx)",
             fg=self.MUTED_TEXT_COLOR,
             bg=self.BG_COLOR,
             font=("Inter", 11),
         )
         subtitle.pack(anchor="w")
 
-    def _open_menu(self) -> None:
-        messagebox.showinfo(
-            "Menu",
-            "Select an SBOM file from the main screen to generate the report.",
-        )
-
-    def _build_controls(self) -> None:
-        controls = tk.Frame(self.content, bg=self.BG_COLOR)
+        controls = tk.Frame(sbom_view, bg=self.BG_COLOR)
         controls.pack(fill="x", padx=16, pady=(0, 12))
 
         left = tk.Frame(controls, bg=self.BG_COLOR)
@@ -197,7 +190,7 @@ class SBOMCheckerGUI:
 
         select_btn = ttk.Button(
             left,
-            text="Generate report",
+            text="Genera report",
             command=self._on_select_file,
             style="TButton",
         )
@@ -205,7 +198,7 @@ class SBOMCheckerGUI:
 
         clear_btn = ttk.Button(
             left,
-            text="Clear selection",
+            text="Cancella selezione",
             command=self._clear_selection,
             style="TButton",
         )
@@ -213,7 +206,7 @@ class SBOMCheckerGUI:
 
         self.selected_file_label = tk.Label(
             left,
-            text="No file selected",
+            text="Nessun file selezionato",
             fg=self.MUTED_TEXT_COLOR,
             bg=self.BG_COLOR,
             font=("Segoe UI", 10),
@@ -231,6 +224,151 @@ class SBOMCheckerGUI:
             font=("Segoe UI", 11, "bold"),
         )
         self.update_label.pack(side="right")
+
+        self.body = tk.PanedWindow(
+            sbom_view,
+            orient=tk.VERTICAL,
+            bg=self.BG_COLOR,
+            sashwidth=8,
+            sashrelief="flat",
+            borderwidth=0,
+            relief="flat",
+            showhandle=False,
+        )
+        self.body.pack(fill="both", expand=True, padx=16, pady=(0, 16))
+
+        self._build_table()
+        self._build_notes_panel()
+        self.root.after(50, self._set_initial_split)
+
+    def _build_about_view(self) -> None:
+        about_view = tk.Frame(self.content_container, bg=self.BG_COLOR)
+        self.views["about"] = about_view
+
+        header = tk.Frame(about_view, bg=self.BG_COLOR)
+        header.pack(fill="x", pady=(16, 8), padx=16)
+
+        title = tk.Label(
+            header,
+            text="Logika SBOM Checker",
+            fg=self.ACCENT_COLOR,
+            bg=self.BG_COLOR,
+            font=("Inter", 18, "bold"),
+        )
+        title.pack(anchor="w")
+
+        subtitle = tk.Label(
+            header,
+            text="Un prodotto Logika Control S.r.l.",
+            fg=self.MUTED_TEXT_COLOR,
+            bg=self.BG_COLOR,
+            font=("Inter", 11),
+        )
+        subtitle.pack(anchor="w")
+
+        content = tk.Frame(about_view, bg=self.BG_COLOR)
+        content.pack(fill="both", expand=True, padx=16, pady=16)
+
+        description = (
+            "Logika SBOM Checker facilita il controllo delle distinte software "
+            "per firmware STM32, consentendo di caricare una SBOM, verificarne le versioni "
+            "e valutare la presenza di aggiornamenti di sicurezza disponibili."
+        )
+
+        tk.Label(
+            content,
+            text="Descrizione dell'applicazione",
+            bg=self.BG_COLOR,
+            fg=self.TEXT_COLOR,
+            font=("Inter", 14, "bold"),
+        ).pack(anchor="w", pady=(0, 12))
+
+        tk.Label(
+            content,
+            text=description,
+            wraplength=760,
+            justify="left",
+            bg=self.BG_COLOR,
+            fg=self.TEXT_COLOR,
+            font=("Inter", 12),
+        ).pack(anchor="w")
+
+    def _build_libraries_view(self) -> None:
+        libraries_view = tk.Frame(self.content_container, bg=self.BG_COLOR)
+        self.views["libraries"] = libraries_view
+
+        header = tk.Frame(libraries_view, bg=self.BG_COLOR)
+        header.pack(fill="x", pady=(16, 8), padx=16)
+
+        title = tk.Label(
+            header,
+            text="Librerie supportate",
+            fg=self.ACCENT_COLOR,
+            bg=self.BG_COLOR,
+            font=("Inter", 18, "bold"),
+        )
+        title.pack(anchor="w")
+
+        tk.Label(
+            header,
+            text="Versioni basate sui rilasci STM32CubeH7 (STM32CubeH7 GitHub)",
+            fg=self.MUTED_TEXT_COLOR,
+            bg=self.BG_COLOR,
+            font=("Inter", 11),
+        ).pack(anchor="w")
+
+        disclaimer = tk.Label(
+            libraries_view,
+            text=(
+                "Le versioni delle librerie fanno riferimento al repository STM32CubeH7 "
+                "di STMicroelectronics: https://github.com/STMicroelectronics/STM32CubeH7"
+            ),
+            fg=self.TEXT_COLOR,
+            bg=self.BG_COLOR,
+            font=("Inter", 11),
+            wraplength=780,
+            justify="left",
+        )
+        disclaimer.pack(fill="x", padx=16)
+
+        container = tk.Frame(libraries_view, bg=self.BG_COLOR)
+        container.pack(fill="both", expand=True, padx=16, pady=12)
+
+        canvas = tk.Canvas(
+            container, bg=self.BG_COLOR, highlightthickness=0, borderwidth=0
+        )
+        scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        self.library_list_frame = tk.Frame(canvas, bg=self.BG_COLOR)
+
+        self.library_list_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all")),
+        )
+
+        canvas.create_window((0, 0), window=self.library_list_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        self.library_canvas = canvas
+        self._populate_library_view()
+
+    def _show_view(self, key: str) -> None:
+        for name, frame in self.views.items():
+            if name == key:
+                frame.pack(fill="both", expand=True)
+            else:
+                frame.pack_forget()
+
+        for name, btn in getattr(self, "sidebar_buttons", {}).items():
+            if name == key:
+                btn.configure(fg=self.ACCENT_COLOR)
+            else:
+                btn.configure(fg=self.MUTED_TEXT_COLOR)
+
+        if key == "libraries":
+            self._populate_library_view()
 
     def _build_table(self) -> None:
         table_frame = tk.Frame(self.body, bg=self.BG_COLOR)
@@ -332,7 +470,7 @@ class SBOMCheckerGUI:
 
     def _clear_selection(self) -> None:
         self.selected_file_label.config(
-            text="No file selected", fg=self.MUTED_TEXT_COLOR
+            text="Nessun file selezionato", fg=self.MUTED_TEXT_COLOR
         )
         self.tree.delete(*self.tree.get_children())
         self.notes_box.config(state="normal")
@@ -438,12 +576,83 @@ class SBOMCheckerGUI:
             1 for lib in data if lib.get("status") == "needs update"
         )
         if count_needs_update:
-            text = f"Libraries to update: {count_needs_update}"
+            text = f"Librerie da aggiornare: {count_needs_update}"
             color = self.ALERT_COLOR
         else:
-            text = "All libraries are up to date"
+            text = "Tutte le librerie sono aggiornate"
             color = self.ACCENT_COLOR
         self.update_label.config(text=text, fg=color)
+
+    def _populate_library_view(self) -> None:
+        for widget in self.library_list_frame.winfo_children():
+            widget.destroy()
+
+        names = sorted(get_library_names(), key=str.lower)
+        if not names:
+            tk.Label(
+                self.library_list_frame,
+                text="Nessuna libreria trovata nel database.",
+                bg=self.BG_COLOR,
+                fg=self.TEXT_COLOR,
+                font=("Inter", 12),
+            ).pack(anchor="w", pady=8)
+            return
+
+        for name in names:
+            releases = list(reversed(get_releases_for_library(name)))
+            section = tk.Frame(self.library_list_frame, bg=self.BG_COLOR)
+            section.pack(fill="x", pady=(0, 12))
+
+            header = tk.Frame(section, bg=self.BG_COLOR)
+            header.pack(fill="x")
+
+            tk.Label(
+                header,
+                text=name,
+                bg=self.BG_COLOR,
+                fg=self.TEXT_COLOR,
+                font=("Inter", 13, "bold"),
+            ).pack(side="left")
+
+            link = self.LIBRARY_LINKS.get(name)
+            if link:
+                link_label = tk.Label(
+                    header,
+                    text=link,
+                    bg=self.BG_COLOR,
+                    fg=self.ACCENT_COLOR,
+                    font=("Inter", 10, "underline"),
+                    cursor="hand2",
+                    wraplength=400,
+                    justify="left",
+                )
+                link_label.pack(side="left", padx=(8, 0))
+                link_label.bind("<Button-1>", lambda _evt, url=link: webbrowser.open(url))
+
+            versions_frame = tk.Frame(section, bg=self.BG_COLOR)
+            versions_frame.pack(fill="x", padx=(8, 0), pady=(4, 0))
+
+            if releases:
+                for rel in releases:
+                    version = rel.get("version") or "n/a"
+                    date = rel.get("release_date") or "data n/a"
+                    tk.Label(
+                        versions_frame,
+                        text=f"- {version} ({date})",
+                        bg=self.BG_COLOR,
+                        fg=self.MUTED_TEXT_COLOR,
+                        font=("Inter", 11),
+                        justify="left",
+                        anchor="w",
+                    ).pack(anchor="w")
+            else:
+                tk.Label(
+                    versions_frame,
+                    text="Nessuna versione disponibile",
+                    bg=self.BG_COLOR,
+                    fg=self.MUTED_TEXT_COLOR,
+                    font=("Inter", 11),
+                ).pack(anchor="w")
 
     def run(self) -> None:
         self.root.mainloop()
