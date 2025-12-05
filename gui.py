@@ -190,7 +190,7 @@ class SBOMCheckerGUI:
 
         select_btn = ttk.Button(
             left,
-            text="Genera report",
+            text="Generate report",
             command=self._on_select_file,
             style="TButton",
         )
@@ -198,7 +198,7 @@ class SBOMCheckerGUI:
 
         clear_btn = ttk.Button(
             left,
-            text="Cancella selezione",
+            text="Delete selection",
             command=self._clear_selection,
             style="TButton",
         )
