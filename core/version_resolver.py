@@ -31,10 +31,10 @@ def _find_release(releases: List[Dict[str, str]], version: str) -> Optional[Dict
 
 def risolvi_versioni(libs: List[Dict[str, str]]) -> List[Dict[str, str]]:
     """
-    Per ogni libreria in input [{name, version}] calcola:
-      - ultima versione disponibile e data
-      - data di rilascio della versione attuale
-      - se esistono aggiornamenti di sicurezza nelle release successive
+    For each input library [{name, version}] calculates:
+      - latest available version and date
+      - release date of the current version
+      - whether security updates exist in subsequent releases
     """
 
     result = []
@@ -46,9 +46,9 @@ def risolvi_versioni(libs: List[Dict[str, str]]) -> List[Dict[str, str]]:
         latest_release = releases[-1] if releases else None
         current_release = _find_release(releases, current_version)
 
-        latest_version = _normalizza(latest_release.get("version")) if latest_release else "non disponibile"
-        latest_date = (latest_release.get("release_date") or "n.d.") if latest_release else "n.d."
-        current_date = (current_release.get("release_date") or "n.d.") if current_release else "n.d."
+        latest_version = _normalizza(latest_release.get("version")) if latest_release else "not available"
+        latest_date = (latest_release.get("release_date") or "n/a") if latest_release else "n/a"
+        current_date = (current_release.get("release_date") or "n/a") if current_release else "n/a"
 
         if releases and current_release:
             idx = releases.index(current_release)
@@ -60,14 +60,14 @@ def risolvi_versioni(libs: List[Dict[str, str]]) -> List[Dict[str, str]]:
         has_security_updates = bool(security_releases)
 
         if not releases or current_release is None:
-            status = "sconosciuto"
-            security_label = "n.d."
+            status = "unknown"
+            security_label = "n/a"
         elif has_security_updates:
-            status = "da aggiornare"
-            security_label = "non sicura"
+            status = "needs update"
+            security_label = "not secure"
         else:
-            status = "aggiornata"
-            security_label = "sicura"
+            status = "up-to-date"
+            security_label = "secure"
 
         result.append(
             {
