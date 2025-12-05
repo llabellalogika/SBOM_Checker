@@ -203,6 +203,14 @@ class SBOMCheckerGUI:
         )
         select_btn.pack(side="left")
 
+        clear_btn = ttk.Button(
+            left,
+            text="Cancella selezione",
+            command=self._clear_selection,
+            style="TButton",
+        )
+        clear_btn.pack(side="left", padx=(8, 0))
+
         self.selected_file_label = tk.Label(
             left,
             text="Nessun file selezionato",
@@ -321,6 +329,16 @@ class SBOMCheckerGUI:
         self._populate_table(data)
         self._populate_notes(data)
         self._update_summary(data)
+
+    def _clear_selection(self) -> None:
+        self.selected_file_label.config(
+            text="Nessun file selezionato", fg=self.MUTED_TEXT_COLOR
+        )
+        self.tree.delete(*self.tree.get_children())
+        self.notes_box.config(state="normal")
+        self.notes_box.delete("1.0", "end")
+        self.notes_box.config(state="disabled")
+        self.update_label.config(text="", fg=self.TEXT_COLOR)
 
     def _populate_table(self, data) -> None:
         self.tree.delete(*self.tree.get_children())
