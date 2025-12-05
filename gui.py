@@ -143,8 +143,22 @@ class SBOMCheckerGUI:
 
         self._build_header()
         self._build_controls()
+
+        self.body = tk.PanedWindow(
+            self.content,
+            orient=tk.VERTICAL,
+            bg=self.BG_COLOR,
+            sashwidth=8,
+            sashrelief="flat",
+            borderwidth=0,
+            relief="flat",
+            showhandle=False,
+        )
+        self.body.pack(fill="both", expand=True, padx=16, pady=(0, 16))
+
         self._build_table()
         self._build_notes_panel()
+        self.root.after(50, self._set_initial_split)
 
     def _build_header(self) -> None:
         header = tk.Frame(self.content, bg=self.BG_COLOR)
@@ -211,8 +225,8 @@ class SBOMCheckerGUI:
         self.update_label.pack(side="right")
 
     def _build_table(self) -> None:
-        table_frame = tk.Frame(self.content, bg=self.BG_COLOR)
-        table_frame.pack(fill="both", expand=True, padx=16, pady=(0, 12))
+        table_frame = tk.Frame(self.body, bg=self.BG_COLOR)
+        self.body.add(table_frame, minsize=150, stretch="always")
 
         columns = [h for h in HEADERS]
         self.tree = ttk.Treeview(
@@ -247,17 +261,17 @@ class SBOMCheckerGUI:
 
     def _build_notes_panel(self) -> None:
         notes_frame = tk.LabelFrame(
-            self.content,
+            self.body,
             text="Note di sicurezza",
             bg=self.PANEL_COLOR,
             fg=self.TEXT_COLOR,
             font=("Inter", 12, "bold"),
         )
-        notes_frame.pack(fill="both", expand=False, padx=16, pady=(0, 16))
+        self.body.add(notes_frame, minsize=200, stretch="always")
 
         self.notes_box = tk.Text(
             notes_frame,  # fix: era notes_container
-            height=8,
+            height=12,
             bg=self.PANEL_COLOR,
             fg=self.TEXT_COLOR,
             insertbackground=self.TEXT_COLOR,
@@ -267,6 +281,21 @@ class SBOMCheckerGUI:
             state="disabled",
         )
         self.notes_box.pack(fill="both", expand=True)
+
+    def _set_initial_split(self) -> None:
+        """Set the split so that the release notes occupy roughly half the window."""
+
+        self.root.update_idletasks()
+        total_height = self.body.winfo_height()
+        if total_height <= 0:
+            return
+
+        midpoint = total_height // 2
+        try:
+            self.body.sash_place(0, 0, midpoint)
+        except tk.TclError:
+            # In rare cases the paned window may not be ready yet; try again shortly.
+            self.root.after(50, self._set_initial_split)
 
     def _on_select_file(self) -> None:
         filepath = filedialog.askopenfilename(
@@ -323,11 +352,15 @@ class SBOMCheckerGUI:
                     version = rel.get("version", "")
                     date = rel.get("release_date") or "data n/a"
                     notes = rel.get("release_notes") or "Release notes non disponibili."
+                    cve = rel.get("cve") or ""
                     self.notes_box.insert(
                         "end", f"  - {version} ({date})\n", ("subtitle",)
                     )
                     for line in notes.splitlines():
                         self.notes_box.insert("end", f"    • {line}\n")
+                    if cve:
+                        for line in cve.splitlines():
+                            self.notes_box.insert("end", f"    CVE: {line}\n", ("cve",))
                 self.notes_box.insert("end", "\n")
 
         self.notes_box.tag_configure(
@@ -336,6 +369,11 @@ class SBOMCheckerGUI:
         self.notes_box.tag_configure(
             "subtitle",
             foreground=self.MUTED_TEXT_COLOR,
+            font=("Inter", 10, "bold"),
+        )
+        self.notes_box.tag_configure(
+            "cve",
+            foreground=self.ALERT_COLOR,
             font=("Inter", 10, "bold"),
         )
         self.notes_box.config(state="disabled")
